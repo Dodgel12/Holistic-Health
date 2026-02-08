@@ -1,0 +1,3 @@
+-- File di definizione dello schema del database.
+-- Contiene la creazione delle tabelle, chiavi primarie,
+-- chiavi esterne e vincoli di integrità.
