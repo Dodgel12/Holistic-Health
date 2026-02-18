@@ -1,6 +1,7 @@
 -- File di definizione dello schema del database.
 -- Contiene la creazione delle tabelle, chiavi primarie,
 -- chiavi esterne e vincoli di integrità.
+-- Usa CREATE TABLE IF NOT EXISTS per essere rieseguito senza errori.
 -- =====================================================
 -- DATABASE
 -- =====================================================
@@ -12,10 +13,10 @@ USE gestionale_studio;
 -- USERS
 -- =====================================================
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -23,7 +24,7 @@ CREATE TABLE users (
 -- CLIENTI
 -- =====================================================
 
-CREATE TABLE clienti (
+CREATE TABLE IF NOT EXISTS clienti (
     cliente_id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     cognome VARCHAR(100) NOT NULL,
@@ -38,7 +39,7 @@ CREATE TABLE clienti (
 -- APPUNTAMENTI
 -- =====================================================
 
-CREATE TABLE appuntamenti (
+CREATE TABLE IF NOT EXISTS appuntamenti (
     appuntamento_id INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT NOT NULL,
     data DATE NOT NULL,
@@ -56,7 +57,7 @@ CREATE TABLE appuntamenti (
 -- VISITE
 -- =====================================================
 
-CREATE TABLE visite (
+CREATE TABLE IF NOT EXISTS visite (
     visita_id INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT NOT NULL,
     data_analisi DATE NOT NULL,
@@ -69,13 +70,13 @@ CREATE TABLE visite (
 -- SINTOMI
 -- =====================================================
 
-CREATE TABLE sintomi (
+CREATE TABLE IF NOT EXISTS sintomi (
     sintomo_id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     descrizione TEXT
 );
 
-CREATE TABLE visita_sintomi (
+CREATE TABLE IF NOT EXISTS visita_sintomi (
     visita_id INT,
     sintomo_id INT,
     PRIMARY KEY (visita_id, sintomo_id),
@@ -87,13 +88,13 @@ CREATE TABLE visita_sintomi (
 -- INTOLLERANZE
 -- =====================================================
 
-CREATE TABLE intolleranze (
+CREATE TABLE IF NOT EXISTS intolleranze (
     intolleranza_id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     descrizione TEXT
 );
 
-CREATE TABLE visita_intolleranze (
+CREATE TABLE IF NOT EXISTS visita_intolleranze (
     visita_id INT,
     intolleranza_id INT,
     PRIMARY KEY (visita_id, intolleranza_id),
@@ -105,12 +106,12 @@ CREATE TABLE visita_intolleranze (
 -- ALIMENTI
 -- =====================================================
 
-CREATE TABLE alimenti (
+CREATE TABLE IF NOT EXISTS alimenti (
     alimento_id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL
 );
 
-CREATE TABLE visita_alimenti (
+CREATE TABLE IF NOT EXISTS visita_alimenti (
     visita_id INT,
     alimento_id INT,
     PRIMARY KEY (visita_id, alimento_id),
@@ -122,13 +123,13 @@ CREATE TABLE visita_alimenti (
 -- INTEGRATORI
 -- =====================================================
 
-CREATE TABLE integratori (
+CREATE TABLE IF NOT EXISTS integratori (
     integratore_id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     descrizione TEXT
 );
 
-CREATE TABLE visita_integratori (
+CREATE TABLE IF NOT EXISTS visita_integratori (
     visita_id INT,
     integratore_id INT,
     PRIMARY KEY (visita_id, integratore_id),
@@ -140,13 +141,13 @@ CREATE TABLE visita_integratori (
 -- QUESTIONARI / DOMANDE / RISPOSTE
 -- =====================================================
 
-CREATE TABLE questionari (
+CREATE TABLE IF NOT EXISTS questionari (
     questionario_id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     attivo BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE domande (
+CREATE TABLE IF NOT EXISTS domande (
     domanda_id INT AUTO_INCREMENT PRIMARY KEY,
     questionario_id INT NOT NULL,
     testo TEXT NOT NULL,
@@ -154,7 +155,7 @@ CREATE TABLE domande (
         ON DELETE CASCADE
 );
 
-CREATE TABLE risposte (
+CREATE TABLE IF NOT EXISTS risposte (
     risposta_id INT AUTO_INCREMENT PRIMARY KEY,
     visita_id INT NOT NULL,
     domanda_id INT NOT NULL,
@@ -169,7 +170,7 @@ CREATE TABLE risposte (
 -- SCHEDA FISICA
 -- =====================================================
 
-CREATE TABLE scheda_fisica (
+CREATE TABLE IF NOT EXISTS scheda_fisica (
     scheda_id INT AUTO_INCREMENT PRIMARY KEY,
     visita_id INT UNIQUE,
     massa_grassa DECIMAL(5,2),
@@ -184,7 +185,7 @@ CREATE TABLE scheda_fisica (
 -- SCHEDA ANAMNESTICA
 -- =====================================================
 
-CREATE TABLE scheda_anamnestica (
+CREATE TABLE IF NOT EXISTS scheda_anamnestica (
     anamnesi_id INT AUTO_INCREMENT PRIMARY KEY,
     visita_id INT UNIQUE,
     osservazioni_finali TEXT,
@@ -196,7 +197,7 @@ CREATE TABLE scheda_anamnestica (
 -- STILE DI VITA
 -- =====================================================
 
-CREATE TABLE stile_vita (
+CREATE TABLE IF NOT EXISTS stile_vita (
     stile_id INT AUTO_INCREMENT PRIMARY KEY,
     anamnesi_id INT UNIQUE,
     alimentazione TEXT,
@@ -211,7 +212,7 @@ CREATE TABLE stile_vita (
 -- ANAMNESI PERSONALI
 -- =====================================================
 
-CREATE TABLE anamnesi_personali (
+CREATE TABLE IF NOT EXISTS anamnesi_personali (
     personale_id INT AUTO_INCREMENT PRIMARY KEY,
     anamnesi_id INT UNIQUE,
     allergie BOOLEAN,
@@ -230,7 +231,7 @@ CREATE TABLE anamnesi_personali (
 -- STATO PSICO-FISICO
 -- =====================================================
 
-CREATE TABLE stato_psico_fisico (
+CREATE TABLE IF NOT EXISTS stato_psico_fisico (
     stato_id INT AUTO_INCREMENT PRIMARY KEY,
     anamnesi_id INT UNIQUE,
     livello_stress INT,
@@ -247,7 +248,7 @@ CREATE TABLE stato_psico_fisico (
 -- QUALITA SONNO
 -- =====================================================
 
-CREATE TABLE qualita_sonno (
+CREATE TABLE IF NOT EXISTS qualita_sonno (
     sonno_id INT AUTO_INCREMENT PRIMARY KEY,
     anamnesi_id INT UNIQUE,
     ore_sonno DECIMAL(4,2),
@@ -263,13 +264,13 @@ CREATE TABLE qualita_sonno (
 -- SUPPORTI UTILIZZATI (farmaci / rimedi / integratori)
 -- =====================================================
 
-CREATE TABLE supporti (
+CREATE TABLE IF NOT EXISTS supporti (
     supporto_id INT AUTO_INCREMENT PRIMARY KEY,
     categoria VARCHAR(100),
     descrizione TEXT
 );
 
-CREATE TABLE anamnesi_supporti (
+CREATE TABLE IF NOT EXISTS anamnesi_supporti (
     anamnesi_id INT,
     supporto_id INT,
     PRIMARY KEY (anamnesi_id, supporto_id),
@@ -280,8 +281,8 @@ CREATE TABLE anamnesi_supporti (
 );
 
 -- ====================================================================================
--- INSERT INTO DATI DEFAULT(Alimenti, Supporti, Intolleranze, Sintomi, Integratori )
+-- INSERT INTO DATI DEFAULT - utente admin con password in chiaro
+-- INSERT IGNORE evita duplicati se l'utente esiste già
 -- ====================================================================================
 
-
-INSERT INTO users (username, password_hash) VALUES ('admin', 'password123');
+INSERT IGNORE INTO users (username, password) VALUES ('admin', 'password123');

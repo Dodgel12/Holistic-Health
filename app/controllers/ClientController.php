@@ -29,7 +29,7 @@ class ClientController {
             $stmt = $db->query("SELECT * FROM users WHERE username = :u", ['u' => $username]);
             $user = $stmt->fetch();
 
-            if ($user && password_verify($password, $user['password_hash'])) {
+            if ($user && $password === $user['password']) {
                 Auth::login($user);
                 header('Location: dashboard.php');
                 exit;
