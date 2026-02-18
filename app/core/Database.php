@@ -17,7 +17,7 @@ class Database {
     private $pdo;
 
     private function __construct() {
-        $host     = 'localhost';
+        $host     = '127.0.0.1';
         $dbname   = 'gestionale_studio';
         $user     = 'root';
         $password = 'root';
