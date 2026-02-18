@@ -278,3 +278,10 @@ CREATE TABLE anamnesi_supporti (
     FOREIGN KEY (supporto_id) REFERENCES supporti(supporto_id)
         ON DELETE CASCADE
 );
+
+-- ====================================================================================
+-- INSERT INTO DATI DEFAULT(Alimenti, Supporti, Intolleranze, Sintomi, Integratori )
+-- ====================================================================================
+
+
+INSERT INTO users (username, password_hash) VALUES ('admin', 'password123');

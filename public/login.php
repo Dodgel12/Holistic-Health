@@ -1,6 +1,12 @@
 <?php
 /**
  * Pagina di login.
- * Permette alla naturopata di autenticarsi inserendo
- * email e password e avvia una sessione protetta.
+ * Gestisce l'autenticazione dell'utente
+ * e l'accesso al sistema.
  */
+require_once __DIR__ . '/../app/config/init.php';
+
+use App\Controllers\ClientController;
+
+$controller = new ClientController();
+$controller->login();

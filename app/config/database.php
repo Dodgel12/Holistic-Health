@@ -1,6 +1,10 @@
 <?php
-/**
- * File di configurazione del database.
- * Contiene i parametri di connessione
- * (host, nome database, utente, password).
- */
+//Dati per connessione al server mysql
+
+return [
+    'host' => '127.0.0.1',
+    'dbname' => 'gestionale_studio',
+    'username' => 'root',
+    'password' => 'root',
+    'charset' => 'utf8mb4'
+];
