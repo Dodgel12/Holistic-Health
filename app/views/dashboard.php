@@ -1,13 +1,7 @@
-<?php require_once 'partials/header.php'; ?>
-/**
- * Vista della dashboard.
- * Mostra all'utente una panoramica dello stato
- * dell'applicazione e delle attività recenti.
- */
+<?php require_once __DIR__ . '/partials/header.php'; ?>
 
 <div class="card">
-    <h1>Benvenuto, <?php echo htmlspecialchars($user['name']); ?></h1>
-    <p>Ruolo: <?php echo htmlspecialchars($user['role']); ?></p>
+    <h1>Benvenuto, <?php echo htmlspecialchars($_SESSION['username']); ?></h1>
 </div>
 
 <div class="card">
@@ -19,4 +13,4 @@
     </div>
 </div>
 
-<?php require_once 'partials/footer.php'; ?>
+<?php require_once __DIR__ . '/partials/footer.php'; ?>

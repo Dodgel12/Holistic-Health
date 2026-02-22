@@ -1,9 +1,4 @@
-<?php require_once 'partials/header.php'; ?>
-/**
- * Vista dettagliata del cliente.
- * Mostra tutte le informazioni relative a un cliente,
- * comprese anamnesi, analisi e appuntamenti.
- */
+<?php require_once __DIR__ . '/partials/header.php'; ?>
 
 <div class="card">
     <?php if (isset($client)): ?>
@@ -14,7 +9,7 @@
                 <a href="clients.php" class="btn btn-danger">Torna alla lista</a>
             </div>
         </div>
-        
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
             <div>
                 <h3>Dati Anagrafici</h3>
@@ -41,5 +36,4 @@
     <?php endif; ?>
 </div>
 
-<?php require_once 'partials/footer.php'; ?>
-
+<?php require_once __DIR__ . '/partials/footer.php'; ?>

@@ -1,16 +1,11 @@
-<?php require_once 'partials/header.php'; ?>
-/**
- * Vista per la creazione di una nuova analisi.
- * Genera dinamicamente il questionario e
- * raccoglie le risposte dell'utente.
- */
+<?php require_once __DIR__ . '/partials/header.php'; ?>
 
 <div class="card">
     <h2>Nuova Analisi per <?php echo htmlspecialchars($client['nome'] . ' ' . $client['cognome']); ?></h2>
-    
+
     <form action="analysis.php?action=store" method="POST">
         <input type="hidden" name="cliente_id" value="<?php echo $client['cliente_id']; ?>">
-        
+
         <div class="form-group">
             <label>Note Generali</label>
             <textarea name="note" rows="3"></textarea>
@@ -33,7 +28,6 @@
             <?php foreach ($questionari as $q): ?>
                 <div style="margin-top: 1rem; border: 1px solid #eee; padding: 1rem;">
                     <h4><?php echo htmlspecialchars($q['nome']); ?></h4>
-                    <!-- Questions handling would go here via AJAX or included PHP based on Domanda model -->
                     <p><em>(Implementazione domande questionario in fase di sviluppo)</em></p>
                 </div>
             <?php endforeach; ?>
@@ -44,4 +38,4 @@
     </form>
 </div>
 
-<?php require_once 'partials/footer.php'; ?>
+<?php require_once __DIR__ . '/partials/footer.php'; ?>

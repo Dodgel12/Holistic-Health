@@ -8,16 +8,11 @@ namespace App\Controllers;
 
 use App\Core\Auth;
 
-class DashboardController {
-    public function index() {
-        Auth::requireLogin();
-        
-        $data = [
-            'user' => Auth::user(),
-            'title' => 'Dashboard'
-        ];
-        
-        extract($data);
+class DashboardController
+{
+    public function index()
+    {
+        Auth::require();
         require_once __DIR__ . '/../views/dashboard.php';
     }
 }

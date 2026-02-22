@@ -12,15 +12,18 @@ namespace App\Core;
 use PDO;
 use PDOException;
 
-class Database {
+class Database
+{
     private static $instance = null;
     private $pdo;
 
-    private function __construct() {
-        $host     = '127.0.0.1';
-        $dbname   = 'gestionale_studio';
-        $user     = 'root';
-        $password = 'root';
+    private function __construct()
+    {
+        $config = require __DIR__ . '/../../app/config/database.php';
+        $host = $config['host'];
+        $dbname = $config['dbname'];
+        $user = $config['username'];
+        $password = $config['password'];
 
         try {
             // Prima connessione senza dbname per poter creare il database se non esiste
@@ -28,7 +31,7 @@ class Database {
                 "mysql:host={$host};charset=utf8mb4",
                 $user,
                 $password
-            );
+                );
             $pdoInit->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             // Esegue schema.sql ad ogni avvio (usa CREATE TABLE IF NOT EXISTS)
@@ -50,33 +53,40 @@ class Database {
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-        } catch (PDOException $e) {
+        }
+        catch (PDOException $e) {
             die("Connessione al database fallita: " . $e->getMessage());
         }
     }
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (self::$instance === null) {
             self::$instance = new self();
         }
         return self::$instance;
     }
 
-    public function getConnection() {
+    public function getConnection()
+    {
         return $this->pdo;
     }
 
-    public function query($sql, $params = []) {
+    public function query($sql, $params = [])
+    {
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt;
     }
 
     // Evita clonazione
-    private function __clone() {}
+    private function __clone()
+    {
+    }
 
     // Evita deserializzazione
-    public function __wakeup() {
+    public function __wakeup()
+    {
         throw new \Exception("Impossibile deserializzare un singleton.");
     }
 }

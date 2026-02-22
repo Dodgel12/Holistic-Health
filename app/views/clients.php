@@ -1,9 +1,4 @@
-<?php require_once 'partials/header.php'; ?>
-/**
- * Vista lista clienti.
- * Visualizza tutti i clienti registrati
- * con possibilità di selezionarne uno.
- */
+<?php require_once __DIR__ . '/partials/header.php'; ?>
 
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -43,4 +38,4 @@
     </table>
 </div>
 
-<?php require_once 'partials/footer.php'; ?>
+<?php require_once __DIR__ . '/partials/footer.php'; ?>

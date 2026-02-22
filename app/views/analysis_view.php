@@ -1,9 +1,4 @@
-<?php require_once 'partials/header.php'; ?>
-/**
- * Vista di dettaglio di una scheda di analisi.
- * Mostra le risposte fornite e i risultati
- * associati a una specifica analisi.
- */
+<?php require_once __DIR__ . '/partials/header.php'; ?>
 
 <div class="card">
     <h2>Dettaglio Analisi #<?php echo $visita['visita_id']; ?></h2>
@@ -21,4 +16,4 @@
     <a href="clients.php" class="btn">Torna ai Clienti</a>
 </div>
 
-<?php require_once 'partials/footer.php'; ?>
+<?php require_once __DIR__ . '/partials/footer.php'; ?>

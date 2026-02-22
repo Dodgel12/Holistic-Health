@@ -1,13 +1,8 @@
-<?php require_once 'partials/header.php'; ?>
-/**
- * Vista degli appuntamenti.
- * Mostra la lista degli appuntamenti programmati
- * e permette la gestione degli stessi.
- */
+<?php require_once __DIR__ . '/partials/header.php'; ?>
 
 <div class="card">
     <h2>Gestione Appuntamenti</h2>
-    
+
     <div style="margin-bottom: 2rem; padding: 1rem; background: #f9f9f9; border-radius: 4px;">
         <h3>Nuovo Appuntamento</h3>
         <form action="appointments.php?action=create" method="POST">
@@ -77,4 +72,4 @@
     </table>
 </div>
 
-<?php require_once 'partials/footer.php'; ?>
+<?php require_once __DIR__ . '/partials/footer.php'; ?>
