@@ -1,9 +1,7 @@
 <?php
 /**
- * Controller delle analisi.
- * Coordina la creazione delle schede di analisi,
- * il caricamento dei questionari e il salvataggio
- * delle risposte.
+ * Controller delle analisi / visite.
+ * Gestisce creazione, visualizzazione e storico visite.
  */
 namespace App\Controllers;
 
@@ -31,16 +29,15 @@ class AnalisiController
     public function create($clientId)
     {
         $client = (new Client())->getById($clientId);
-        $questionari = (new Questionario())->getActive();
         require_once __DIR__ . '/../views/analysis_form.php';
     }
 
     public function store()
     {
-        $clienteId = $_POST['cliente_id'];
-        $visitaId = $this->model->createVisita($clienteId, date('Y-m-d'), $_POST['note'] ?? '');
+        $clienteId = (int) $_POST['cliente_id'];
+        $visitaId  = $this->model->createVisita($clienteId, date('Y-m-d'), $_POST['note'] ?? '');
         $this->model->saveFisica($visitaId, $_POST);
-        header('Location: clients.php?action=show&id=' . $clienteId);
+        header('Location: visits.php?action=history&clientId=' . $clienteId);
         exit;
     }
 
@@ -48,5 +45,12 @@ class AnalisiController
     {
         $visita = $this->model->getVisitaById($id);
         require_once __DIR__ . '/../views/analysis_view.php';
+    }
+
+    public function history($clientId)
+    {
+        $client = (new Client())->getById($clientId);
+        $visite = $this->model->getVisiteByClientWithFisica($clientId);
+        require_once __DIR__ . '/../views/visit_history.php';
     }
 }

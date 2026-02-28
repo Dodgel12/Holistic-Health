@@ -286,3 +286,20 @@ CREATE TABLE IF NOT EXISTS anamnesi_supporti (
 -- ====================================================================================
 
 INSERT IGNORE INTO users (username, password) VALUES ('admin', 'password123');
+
+-- =====================================================
+-- AGGIORNA SCHEDA FISICA CON NUOVI PARAMETRI
+-- Aggiunte colonne per le misurazioni complete.
+-- Usa ALTER TABLE IF NOT EXISTS per sicurezza.
+-- =====================================================
+
+-- Aggiunge colonne per le misurazioni fisiche complete
+ALTER TABLE scheda_fisica
+    ADD COLUMN IF NOT EXISTS peso DECIMAL(5,2),
+    ADD COLUMN IF NOT EXISTS altezza DECIMAL(5,2),
+    ADD COLUMN IF NOT EXISTS acqua_corporea DECIMAL(5,2),
+    ADD COLUMN IF NOT EXISTS metabolismo_basale INT,
+    ADD COLUMN IF NOT EXISTS eta_metabolica INT,
+    ADD COLUMN IF NOT EXISTS grasso_viscerale INT,
+    ADD COLUMN IF NOT EXISTS massa_ossea DECIMAL(5,2);
+

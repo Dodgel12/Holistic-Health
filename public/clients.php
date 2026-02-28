@@ -1,8 +1,6 @@
 <?php
 /**
- * Pagina dei clienti.
- * Gestisce la visualizzazione, creazione e modifica
- * dei dati dei clienti.
+ * Router principali per i clienti.
  */
 require_once __DIR__ . '/../app/config/init.php';
 
@@ -14,14 +12,26 @@ $action = $_GET['action'] ?? 'index';
 
 switch ($action) {
     case 'new':
-        $data = ['title' => 'Nuovo Cliente'];
-        require_once __DIR__ . '/../app/views/client_view.php'; 
+        require_once __DIR__ . '/../app/views/client_view.php';
         break;
     case 'create':
-        $controller->create();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->create();
+        } else {
+            header('Location: clients.php');
+            exit;
+        }
         break;
     case 'show':
-        $controller->show($_GET['id']);
+        $controller->show((int) $_GET['id']);
+        break;
+    case 'delete':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->delete();
+        } else {
+            header('Location: clients.php');
+            exit;
+        }
         break;
     default:
         $controller->index();

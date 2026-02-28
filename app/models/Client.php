@@ -1,7 +1,6 @@
 <?php
 /**
  * Modello Client.
- * Rappresenta un cliente e gestisce le operazioni
  * CRUD sui dati anagrafici dei clienti.
  */
 namespace App\Models;
@@ -16,6 +15,18 @@ class Client {
         $this->db = Database::getInstance();
     }
 
+    /** Tutti i clienti con data ultima visita */
+    public function getAllWithLastVisit() {
+        $sql = "SELECT c.*, 
+                    MAX(v.data_analisi) AS ultima_visita
+                FROM clienti c
+                LEFT JOIN visite v ON c.cliente_id = v.cliente_id
+                GROUP BY c.cliente_id
+                ORDER BY c.cognome, c.nome";
+        return $this->db->query($sql)->fetchAll();
+    }
+
+    /** Tutti i clienti (lista semplice) */
     public function getAll() {
         $stmt = $this->db->query("SELECT * FROM clienti ORDER BY cognome, nome");
         return $stmt->fetchAll();
@@ -30,40 +41,33 @@ class Client {
         $sql = "INSERT INTO clienti (nome, cognome, data_nascita, professione, telefono, email, indirizzo) 
                 VALUES (:nome, :cognome, :data_nascita, :professione, :telefono, :email, :indirizzo)";
         $this->db->query($sql, [
-            'nome' => $data['nome'],
-            'cognome' => $data['cognome'],
+            'nome'         => $data['nome'],
+            'cognome'      => $data['cognome'],
             'data_nascita' => $data['data_nascita'] ?? null,
-            'professione' => $data['professione'] ?? null,
-            'telefono' => $data['telefono'] ?? null,
-            'email' => $data['email'] ?? null,
-            'indirizzo' => $data['indirizzo'] ?? null
+            'professione'  => $data['professione'] ?? null,
+            'telefono'     => $data['telefono'] ?? null,
+            'email'        => $data['email'] ?? null,
+            'indirizzo'    => $data['indirizzo'] ?? null
         ]);
         return $this->db->getConnection()->lastInsertId();
     }
 
     public function update($id, $data) {
         $sql = "UPDATE clienti SET 
-                nome = :nome, 
-                cognome = :cognome, 
-                data_nascita = :data_nascita, 
-                professione = :professione, 
-                telefono = :telefono, 
-                email = :email, 
-                indirizzo = :indirizzo 
+                nome = :nome, cognome = :cognome, data_nascita = :data_nascita,
+                professione = :professione, telefono = :telefono,
+                email = :email, indirizzo = :indirizzo
                 WHERE cliente_id = :id";
-        
-        $params = [
-            'id' => $id,
-            'nome' => $data['nome'],
-            'cognome' => $data['cognome'],
+        return $this->db->query($sql, [
+            'id'           => $id,
+            'nome'         => $data['nome'],
+            'cognome'      => $data['cognome'],
             'data_nascita' => $data['data_nascita'] ?? null,
-            'professione' => $data['professione'] ?? null,
-            'telefono' => $data['telefono'] ?? null,
-            'email' => $data['email'] ?? null,
-            'indirizzo' => $data['indirizzo'] ?? null
-        ];
-        
-        return $this->db->query($sql, $params);
+            'professione'  => $data['professione'] ?? null,
+            'telefono'     => $data['telefono'] ?? null,
+            'email'        => $data['email'] ?? null,
+            'indirizzo'    => $data['indirizzo'] ?? null
+        ]);
     }
 
     public function delete($id) {
