@@ -4,7 +4,7 @@
 <div class="top-bar">
     <div>
         <div class="breadcrumb">Dashboard</div>
-        <h1>Benvenuto, <?php echo htmlspecialchars($_SESSION['username']); ?> 👋</h1>
+        <h1>Benvenuto/a, <?php echo htmlspecialchars($_SESSION['username']); ?></h1>
     </div>
 </div>
 

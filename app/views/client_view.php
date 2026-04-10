@@ -83,12 +83,20 @@ Validation.bindClear([
         <h1><?php echo htmlspecialchars($client['nome'].' '.$client['cognome']); ?></h1>
     </div>
     <div class="top-bar-actions">
-        <a href="anamnesis.php?action=create&clientId=<?php echo $client['cliente_id']; ?>" class="btn btn-outline">
-            Visita Anamnestica
-        </a>
-        <a href="analysis.php?action=create&clientId=<?php echo $client['cliente_id']; ?>" class="btn btn-primary">
-            + Nuova Visita
-        </a>
+        <?php 
+        $hasAnamnesi = (new App\Models\SchedaAnamnestica())->hasAnamnesis($client['cliente_id']);
+        if (!$hasAnamnesi): ?>
+            <a href="anamnesis.php?action=create&clientId=<?php echo $client['cliente_id']; ?>" class="btn btn-primary" title="Esegui prima l'anamnesi">
+                + Inizia con Anamnesi
+            </a>
+        <?php else: ?>
+            <a href="anamnesis.php?action=create&clientId=<?php echo $client['cliente_id']; ?>" class="btn btn-outline" style="opacity: 0.6;">
+                Rifai Anamnesi
+            </a>
+            <a href="analysis.php?action=create&clientId=<?php echo $client['cliente_id']; ?>" class="btn btn-primary">
+                + Nuova Visita
+            </a>
+        <?php endif; ?>
         <a href="clients.php" class="btn btn-ghost btn-sm">← Torna alla lista</a>
     </div>
 </div>

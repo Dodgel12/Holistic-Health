@@ -53,6 +53,10 @@ class SchedaAnalisi {
                 "SELECT * FROM scheda_fisica WHERE visita_id = :id",
                 ['id' => $id]
             )->fetch() ?: [];
+
+            // Aggiunta: recupera anche i dati anamnestici se presenti
+            $schedaAnamnestica = new SchedaAnamnestica();
+            $visita['anamnesi'] = $schedaAnamnestica->getByVisitaId($id);
         }
         return $visita;
     }

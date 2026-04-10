@@ -65,4 +65,121 @@ $magra = (isset($f['peso'], $f['massa_grassa']))
 
 </div>
 
+<?php if (!empty($visita['anamnesi'])):
+    $a = $visita['anamnesi'];
+?>
+<div class="form-section-title">Dati Anamnestici</div>
+
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+    <!-- Stile di Vita -->
+    <div class="card">
+        <div class="card-title">Stile di Vita</div>
+        <div style="display:grid; gap:12px;">
+            <div>
+                <div class="text-muted text-sm">Alimentazione</div>
+                <div><?php echo nl2br(htmlspecialchars($a['stile_vita']['alimentazione'] ?? '—')); ?></div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Attività Fisica</div>
+                <div>
+                    <?php echo htmlspecialchars($a['stile_vita']['attivita_fisica_tipo'] ?? '—'); ?> 
+                    (<?php echo htmlspecialchars($a['stile_vita']['attivita_fisica_frequenza'] ?? '—'); ?>)
+                </div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Note Stile di Vita</div>
+                <div><?php echo nl2br(htmlspecialchars($a['stile_vita']['descrizione'] ?? '—')); ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anamnesi Personali -->
+    <div class="card">
+        <div class="card-title">Anamnesi Personali</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+                <div class="text-muted text-sm">Allergie</div>
+                <div><?php echo ($a['personale']['allergie'] ?? 0) ? 'Sì: '.htmlspecialchars($a['personale']['allergie_dettagli']) : 'No'; ?></div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Patologie</div>
+                <div><?php echo ($a['personale']['patologie'] ?? 0) ? 'Sì: '.htmlspecialchars($a['personale']['patologie_dettagli']) : 'No'; ?></div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Alcol / Fumo</div>
+                <div>
+                    Alcol: <?php echo ($a['personale']['alcol'] ?? 0) ? 'Sì' : 'No'; ?> / 
+                    Fumo: <?php echo ($a['personale']['fumo'] ?? 0) ? 'Sì' : 'No'; ?>
+                </div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Farmaci / Integratori</div>
+                <div><?php echo nl2br(htmlspecialchars($a['personale']['farmaci_correnti'] ?? '—')); ?></div>
+            </div>
+            <div style="grid-column:1/-1;">
+                <div class="text-muted text-sm">Interventi/Eventi</div>
+                <div><?php echo nl2br(htmlspecialchars($a['personale']['interventi_chirurgici'] ?? '—')); ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stato Psico-Fisico -->
+    <div class="card">
+        <div class="card-title">Stato Psico-Fisico</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+                <div class="text-muted text-sm">Stress (1-10)</div>
+                <div style="font-weight:600;"><?php echo $a['psico_fisico']['livello_stress'] ?? '—'; ?></div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Concentrazione (1-10)</div>
+                <div style="font-weight:600;"><?php echo $a['psico_fisico']['concentrazione'] ?? '—'; ?></div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Umore</div>
+                <div><?php echo htmlspecialchars($a['psico_fisico']['umore'] ?? '—'); ?></div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Ansia</div>
+                <div><?php echo ($a['psico_fisico']['ansia'] ?? 0) ? 'Sì' : 'No'; ?></div>
+            </div>
+            <div style="grid-column:1/-1;">
+                <div class="text-muted text-sm">Motivazione/Obiettivi</div>
+                <div><?php echo nl2br(htmlspecialchars($a['psico_fisico']['motivazione'] ?? '—')); ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qualità Sonno -->
+    <div class="card">
+        <div class="card-title">Qualità Sonno</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+                <div class="text-muted text-sm">Ore Sonno</div>
+                <div><?php echo $a['sonno']['ore_sonno'] ?? '—'; ?> ore</div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Risvegli</div>
+                <div><?php echo $a['sonno']['risvegli_notturni'] ?? '0'; ?> a notte</div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Qualità</div>
+                <div><?php echo htmlspecialchars($a['sonno']['qualita_percepita'] ?? '—'); ?></div>
+            </div>
+            <div>
+                <div class="text-muted text-sm">Diff. Addormentarsi</div>
+                <div><?php echo ($a['sonno']['difficolta_addormentarsi'] ?? 0) ? 'Sì' : 'No'; ?></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Osservazioni Finali</div>
+    <div style="background:var(--bg); padding:16px; border-radius:var(--radius-sm); border-left:4px solid var(--primary);">
+        <?php echo nl2br(htmlspecialchars($a['osservazioni_finali'] ?? '—')); ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php require_once __DIR__ . '/partials/footer.php'; ?>

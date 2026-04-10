@@ -8,6 +8,7 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Models\Client;
 use App\Models\SchedaAnalisi;
+use App\Models\SchedaAnamnestica;
 use App\Models\Questionario;
 
 class AnalisiController
@@ -28,6 +29,13 @@ class AnalisiController
 
     public function create($clientId)
     {
+        $schedaAnamnestica = new SchedaAnamnestica();
+        if (!$schedaAnamnestica->hasAnamnesis($clientId)) {
+             // Forza l'anamnesi se non esiste
+             header('Location: anamnesis.php?action=create&clientId=' . $clientId);
+             exit;
+        }
+
         $client = (new Client())->getById($clientId);
         require_once __DIR__ . '/../views/analysis_form.php';
     }

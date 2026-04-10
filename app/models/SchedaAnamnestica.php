@@ -109,4 +109,15 @@ class SchedaAnamnestica {
 
         return $anamnesiId;
     }
+
+    public function hasAnamnesis($clientId) {
+        $res = $this->db->query(
+            "SELECT COUNT(*) as count 
+             FROM scheda_anamnestica s
+             JOIN visite v ON s.visita_id = v.visita_id
+             WHERE v.cliente_id = :id",
+            ['id' => $clientId]
+        )->fetch();
+        return (int)($res['count'] ?? 0) > 0;
+    }
 }

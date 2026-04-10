@@ -70,7 +70,13 @@ $grassoJson  = json_encode(array_map(fn($v) => $v['fisica']['massa_grassa'] ?? n
                     <td><?php echo isset($f['massa_grassa']) ? $f['massa_grassa'].' %' : '—'; ?></td>
                     <td><?php echo $magra !== null ? $magra.' kg' : '—'; ?></td>
                     <td><?php echo isset($f['acqua_corporea']) ? $f['acqua_corporea'].' %' : '—'; ?></td>
-                    <td class="text-muted text-sm"><?php echo htmlspecialchars(substr($v['note'] ?? '', 0, 50)); ?></td>
+                    <td class="text-muted text-sm">
+                        <?php if (trim($v['note'] ?? '') === 'Visita anamnestica'): ?>
+                            <span class="badge badge-purple">Anamnesi</span>
+                        <?php else: ?>
+                            <?php echo htmlspecialchars(substr($v['note'] ?? '', 0, 50)); ?>
+                        <?php endif; ?>
+                    </td>
                     <td>
                         <a href="visits.php?action=show&id=<?php echo $v['visita_id']; ?>" class="btn btn-ghost btn-sm">Dettagli</a>
                     </td>

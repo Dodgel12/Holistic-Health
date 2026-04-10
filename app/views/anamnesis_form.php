@@ -17,7 +17,7 @@
         <input type="hidden" name="cliente_id" value="<?php echo $client['cliente_id']; ?>">
 
         <!-- ===== STILE DI VITA ===== -->
-        <div class="form-section-title">🥗 Stile di Vita</div>
+        <div class="form-section-title">Stile di Vita</div>
         <div class="form-grid">
             <div class="form-group form-full">
                 <label for="alimentazione">Alimentazione / Dieta Seguita</label>
@@ -45,7 +45,7 @@
         </div>
 
         <!-- ===== ANAMNESI PERSONALI ===== -->
-        <div class="form-section-title">🏥 Anamnesi Personali</div>
+        <div class="form-section-title">Anamnesi Personali</div>
         <div class="form-grid">
             <div class="form-group">
                 <label>Allergie</label>
@@ -94,7 +94,7 @@
         </div>
 
         <!-- ===== STATO PSICO-FISICO ===== -->
-        <div class="form-section-title">🧠 Stato Psico-Fisico</div>
+        <div class="form-section-title">Stato Psico-Fisico</div>
         <div class="form-grid">
             <div class="form-group">
                 <label for="livello_stress">Livello di Stress (1=basso, 10=alto): <strong id="stressVal">5</strong></label>
@@ -133,7 +133,7 @@
         </div>
 
         <!-- ===== QUALITÀ DEL SONNO ===== -->
-        <div class="form-section-title">😴 Qualità del Sonno</div>
+        <div class="form-section-title">Qualità del Sonno</div>
         <div class="form-grid-3">
             <div class="form-group">
                 <label for="ore_sonno">Ore di Sonno (media)</label>
@@ -165,7 +165,7 @@
         </div>
 
         <!-- ===== OSSERVAZIONI FINALI ===== -->
-        <div class="form-section-title">📋 Osservazioni Finali</div>
+        <div class="form-section-title">Osservazioni Finali</div>
         <div class="form-group">
             <label for="osservazioni_finali">Note e osservazioni conclusive *</label>
             <textarea id="osservazioni_finali" name="osservazioni_finali" rows="5"

@@ -3,7 +3,6 @@
    Palette viola, sidebar sinistra, layout moderno
    ========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* --- Tokens --- */
 :root {
@@ -30,6 +29,30 @@
   --transition:     0.2s ease;
 }
 
+/* --- Dark Mode Overrides --- */
+[data-theme='dark'] {
+  --bg:             #0B0B15;
+  --bg-white:       #151525;
+  --text:           #E5E7EB;
+  --text-muted:     #9CA3AF;
+  --border:         #2D2D3F;
+  --sidebar-bg:     #080810;
+  --accent-light:   #2D1570;
+  --shadow:         0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg:      0 12px 48px rgba(0,0,0,0.6);
+}
+
+[data-theme='dark'] table tbody tr:hover { background: rgba(255,255,255,0.03); }
+[data-theme='dark'] .btn-ghost:hover { background: var(--border); }
+[data-theme='dark'] .search-bar, 
+[data-theme='dark'] .form-group input, 
+[data-theme='dark'] .form-group select, 
+[data-theme='dark'] .form-group textarea { background: #1B1B2F; }
+[data-theme='dark'] .modal { background: #151525; }
+[data-theme='dark'] .side-panel { background: #151525; }
+[data-theme='dark'] .calendar-widget { background: #151525; }
+[data-theme='dark'] .cal-nav button { background: #1B1B2F; }
+
 /* --- Reset --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; }
@@ -42,6 +65,11 @@ body {
   min-height: 100vh;
   font-size: 14px;
   line-height: 1.5;
+  transition: background var(--transition), color var(--transition);
+}
+
+.sidebar, .card, .main-content, .top-bar, .modal, .side-panel, .nav-item {
+  transition: background var(--transition), color var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
 /* =========================================================
