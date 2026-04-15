@@ -48,39 +48,9 @@ $concentrazioneJson = json_encode(array_map(function ($v) {
         : null;
 }, $moodVisite));
 
-$ansiaJson = json_encode(array_map(function ($v) {
-    if (!isset($v['anamnesi_snapshot']['psico_fisico']['ansia'])) {
-        return null;
-    }
-    return ((int) $v['anamnesi_snapshot']['psico_fisico']['ansia']) === 1 ? 10 : 0;
-}, $moodVisite));
-
-$difficoltaSonnoJson = json_encode(array_map(function ($v) {
-    if (!isset($v['anamnesi_snapshot']['sonno']['difficolta_addormentarsi'])) {
-        return null;
-    }
-    return ((int) $v['anamnesi_snapshot']['sonno']['difficolta_addormentarsi']) === 1 ? 10 : 0;
-}, $moodVisite));
-
-$qualitaSonnoJson = json_encode(array_map(function ($v) {
-    $map = [
-        'Pessima' => 2,
-        'Scarsa' => 4,
-        'Discreta' => 6,
-        'Buona' => 8,
-        'Ottima' => 10,
-    ];
-    $q = trim((string) ($v['anamnesi_snapshot']['sonno']['qualita_percepita'] ?? ''));
-    if ($q === '' || !isset($map[$q])) {
-        return null;
-    }
-    return $map[$q];
-}, $moodVisite));
-
 $hasPesoData = false;
 $hasStressData = false;
 $hasConcentrazioneData = false;
-$hasMoodExtraData = false;
 foreach ($chartVisite as $v) {
     if (!$hasPesoData && isset($v['fisica']['peso']) && $v['fisica']['peso'] !== null && $v['fisica']['peso'] !== '') {
         $hasPesoData = true;
@@ -89,21 +59,11 @@ foreach ($chartVisite as $v) {
 
 foreach ($moodVisite as $v) {
     $p = $v['anamnesi_snapshot']['psico_fisico'] ?? [];
-    $s = $v['anamnesi_snapshot']['sonno'] ?? [];
     if (!$hasStressData && isset($p['livello_stress']) && $p['livello_stress'] !== null && $p['livello_stress'] !== '') {
         $hasStressData = true;
     }
     if (!$hasConcentrazioneData && isset($p['concentrazione']) && $p['concentrazione'] !== null && $p['concentrazione'] !== '') {
         $hasConcentrazioneData = true;
-    }
-    if (
-        !$hasMoodExtraData && (
-            (isset($p['ansia']) && $p['ansia'] !== null && $p['ansia'] !== '') ||
-            (isset($s['difficolta_addormentarsi']) && $s['difficolta_addormentarsi'] !== null && $s['difficolta_addormentarsi'] !== '') ||
-            (isset($s['qualita_percepita']) && trim((string) $s['qualita_percepita']) !== '')
-        )
-    ) {
-        $hasMoodExtraData = true;
     }
 }
 ?>
@@ -161,17 +121,6 @@ foreach ($moodVisite as $v) {
                 <div class="chart-empty">Nessun dato su stress/concentrazione disponibile nelle visite.</div>
             <?php endif; ?>
         </div>
-    </div>
-</div>
-
-<div class="card">
-    <div class="chart-title">Indicatori Umore (0-10)</div>
-    <div class="chart-container">
-        <?php if ($hasMoodExtraData): ?>
-            <canvas id="moodIndicatorsChart"></canvas>
-        <?php else: ?>
-            <div class="chart-empty">Nessun altro indicatore utile all'umore disponibile (ansia/sonno).</div>
-        <?php endif; ?>
     </div>
 </div>
 <?php endif; ?>
@@ -242,9 +191,6 @@ const pesoData   = <?php echo $pesoJson; ?>;
 const moodLabels = <?php echo $moodLabelsJson; ?>;
 const stressData = <?php echo $stressJson; ?>;
 const concentrazioneData = <?php echo $concentrazioneJson; ?>;
-const ansiaData = <?php echo $ansiaJson; ?>;
-const difficoltaSonnoData = <?php echo $difficoltaSonnoJson; ?>;
-const qualitaSonnoData = <?php echo $qualitaSonnoJson; ?>;
 
 function getAxisBounds(values, padding = 2) {
     const numeric = values.filter(v => typeof v === 'number' && !Number.isNaN(v));
@@ -363,57 +309,6 @@ if (stressConcentrazioneCanvas) {
     });
 }
 
-const moodIndicatorsCanvas = document.getElementById('moodIndicatorsChart');
-if (moodIndicatorsCanvas) {
-    new Chart(moodIndicatorsCanvas, {
-        type: 'line',
-        data: {
-            labels: moodLabels,
-            datasets: [
-                {
-                    label: 'Ansia (0/10)',
-                    data: ansiaData,
-                    borderColor: '#F59E0B',
-                    backgroundColor: 'rgba(245,158,11,0.10)',
-                    fill: false,
-                    tension: 0.3,
-                    borderWidth: 2
-                },
-                {
-                    label: 'Difficoltà ad addormentarsi (0/10)',
-                    data: difficoltaSonnoData,
-                    borderColor: '#8B5CF6',
-                    backgroundColor: 'rgba(139,92,246,0.10)',
-                    fill: false,
-                    tension: 0.3,
-                    borderWidth: 2
-                },
-                {
-                    label: 'Qualità sonno (2-10)',
-                    data: qualitaSonnoData,
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16,185,129,0.10)',
-                    fill: false,
-                    tension: 0.3,
-                    borderWidth: 2
-                }
-            ]
-        },
-        options: {
-            ...commonOptions,
-            plugins: { legend: { display: true } },
-            scales: {
-                ...commonOptions.scales,
-                y: {
-                    ...commonOptions.scales.y,
-                    min: 0,
-                    max: 10,
-                    ticks: { stepSize: 1 }
-                }
-            }
-        }
-    });
-}
 </script>
 <?php endif; ?>
 
