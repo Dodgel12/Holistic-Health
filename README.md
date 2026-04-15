@@ -90,9 +90,3 @@ Alternative orientate al risparmio:
 ### Fallback automatico
 
 Se la API non è configurata o la richiesta fallisce, l'app mostra automaticamente il riepilogo locale calcolato internamente.
-
-## Sicurezza Operativa
-
-- Non salvare mai chiavi API reali nel repository.
-- Preferire variabili ambiente in sviluppo e produzione.
-- Verificare i permessi dei file di configurazione sul server.
