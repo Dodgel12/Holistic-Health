@@ -1,6 +1,6 @@
 <?php
 /**
- * Router principale per la visita anamnestica.
+ * Router visita anamnestica.
  */
 require_once __DIR__ . '/../app/config/init.php';
 

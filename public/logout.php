@@ -1,8 +1,7 @@
 <?php
 /**
- * Pagina di logout.
- * Termina la sessione dell'utente
- * e lo reindirizza alla pagina di login.
+ * Router logout.
+ * Chiude la sessione e rimanda al login.
  */
 require_once __DIR__ . '/../app/config/init.php';
 

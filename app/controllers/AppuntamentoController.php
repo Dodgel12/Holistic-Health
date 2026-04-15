@@ -1,8 +1,7 @@
 <?php
 /**
- * Controller degli appuntamenti.
- * Gestisce la logica per la pianificazione,
- * modifica e visualizzazione degli appuntamenti.
+ * Controller appuntamenti.
+ * Gestisce agenda, inserimento, stato e cancellazione.
  */
 namespace App\Controllers;
 
@@ -29,6 +28,14 @@ class AppuntamentoController
 
     public function store()
     {
+        $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+        if ($clienteId <= 0) {
+            header('Location: appointments.php?error=missing-client');
+            exit;
+        }
+
+        $_POST['cliente_id'] = $clienteId;
+
         $this->model->create($_POST);
         header('Location: appointments.php');
         exit;
@@ -37,6 +44,19 @@ class AppuntamentoController
     public function delete($id)
     {
         $this->model->delete($id);
+        header('Location: appointments.php');
+        exit;
+    }
+
+    public function updateStatus()
+    {
+        $id = (int) ($_POST['appuntamento_id'] ?? 0);
+        $stato = $_POST['stato'] ?? 'Programmato';
+
+        if ($id > 0) {
+            $this->model->updateStatus($id, $stato);
+        }
+
         header('Location: appointments.php');
         exit;
     }

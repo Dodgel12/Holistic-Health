@@ -1,5 +1,5 @@
 <?php
-//Dati per connessione al server mysql
+// Dati base per la connessione a MySQL.
 
 return [
     'host' => '127.0.0.1',

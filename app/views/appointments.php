@@ -7,12 +7,12 @@
     </div>
 </div>
 
-<div style="display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start;">
+<div class="page-grid">
 
     <!-- Tabella appuntamenti -->
-    <div class="card" style="padding:0; overflow:hidden;">
-        <div style="padding:16px 20px; border-bottom:1px solid var(--border);">
-            <div class="card-title" style="margin:0;">Prossimi Appuntamenti</div>
+    <div class="card card-no-pad">
+        <div class="card-toolbar">
+            <div class="card-title inline-card-title">Prossimi Appuntamenti</div>
         </div>
         <div class="table-wrapper">
             <table>
@@ -34,7 +34,7 @@
                         <td class="text-muted"><?php echo substr($app['ora_inizio'],0,5).' – '.substr($app['ora_fine'],0,5); ?></td>
                         <td>
                             <div class="client-info">
-                                <div class="avatar" style="width:30px;height:30px;font-size:11px;">
+                                <div class="avatar compact-avatar">
                                     <?php echo strtoupper(substr($app['nome'],0,1).substr($app['cognome'],0,1)); ?>
                                 </div>
                                 <?php echo htmlspecialchars($app['nome'].' '.$app['cognome']); ?>
@@ -45,22 +45,34 @@
                             <?php
                             $stato = $app['stato'] ?? 'Programmato';
                             $badge = match($stato) {
-                                'Completato' => 'badge-green',
-                                'Annullato'  => 'badge-red',
+                                'Svolto'     => 'badge-green',
+                                'Assente'    => 'badge-red',
+                                'Saltato'    => 'badge-red',
                                 default      => 'badge-yellow'
                             };
                             ?>
-                            <span class="badge <?php echo $badge; ?>"><?php echo htmlspecialchars($stato); ?></span>
+                            <div class="status-cell">
+                                <span class="badge <?php echo $badge; ?>"><?php echo htmlspecialchars($stato); ?></span>
+                                <form action="appointments.php?action=status" method="POST">
+                                    <input type="hidden" name="appuntamento_id" value="<?php echo (int) $app['appuntamento_id']; ?>">
+                                    <select name="stato" onchange="this.form.submit()" class="status-select">
+                                        <?php $stati = ['Programmato', 'Assente', 'Svolto', 'Saltato']; ?>
+                                        <?php foreach ($stati as $s): ?>
+                                            <option value="<?php echo $s; ?>" <?php echo $s === $stato ? 'selected' : ''; ?>><?php echo $s; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </form>
+                            </div>
                         </td>
                         <td>
                             <a href="appointments.php?action=delete&id=<?php echo $app['appuntamento_id']; ?>"
                                class="btn btn-danger btn-sm"
-                               onclick="return confirm('Eliminare questo appuntamento?')">Elimina</a>
+                               onclick="DeleteModal.confirmDeleteLink(this.href, { title: 'Elimina appuntamento', message: 'Eliminare questo appuntamento?' }); return false;">Elimina</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Nessun appuntamento in programma.</td></tr>
+                    <tr><td colspan="6" class="empty-state">Nessun appuntamento in programma.</td></tr>
                 <?php endif; ?>
                 </tbody>
             </table>
@@ -74,11 +86,11 @@
             <div class="form-group">
                 <label for="cliente_id">Paziente *</label>
                 <select id="cliente_id" name="cliente_id" required>
-                    <option value="">Seleziona paziente…</option>
+                    <option value="">Seleziona paziente...</option>
                     <?php foreach ($clients as $c): ?>
-                    <option value="<?php echo $c['cliente_id']; ?>">
-                        <?php echo htmlspecialchars($c['nome'].' '.$c['cognome']); ?>
-                    </option>
+                        <option value="<?php echo (int) $c['cliente_id']; ?>">
+                            <?php echo htmlspecialchars($c['cognome'] . ' ' . $c['nome']); ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
                 <span class="form-error" id="clienteError"></span>
@@ -88,7 +100,7 @@
                 <input type="date" id="data" name="data">
                 <span class="form-error" id="dataError"></span>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="grid-2-col-gap-12">
                 <div class="form-group">
                     <label for="ora_inizio">Ora Inizio *</label>
                     <input type="time" id="ora_inizio" name="ora_inizio">
@@ -111,9 +123,9 @@
             </div>
             <div class="form-group">
                 <label for="note">Note</label>
-                <textarea id="note" name="note" style="min-height:70px;" placeholder="Note sull'appuntamento…"></textarea>
+                <textarea id="note" name="note" class="min-h-70" placeholder="Note sull'appuntamento…"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;">
+            <button type="submit" class="btn btn-primary btn-full mt-2">
                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -133,7 +145,7 @@ document.getElementById('appointmentForm').addEventListener('submit', function(e
     ok = Validation.required(document.getElementById('ora_inizio'),  document.getElementById('oraInizioError'), 'L\'ora di inizio è obbligatoria.') && ok;
     ok = Validation.required(document.getElementById('ora_fine'),    document.getElementById('oraFineError'),   'L\'ora di fine è obbligatoria.') && ok;
 
-    // Verifica ora_inizio < ora_fine
+    // Controlla che ora inizio sia prima di ora fine.
     const inizio = document.getElementById('ora_inizio').value;
     const fine   = document.getElementById('ora_fine').value;
     if (ok && inizio >= fine) {

@@ -1,100 +1,98 @@
-Holisitc-Health App Management APP
+# Holistic-Health
 
-Applicazione web sviluppata con stack LAMP (Linux, Apache, MySQL, PHP) per la gestione dell’attività di una naturopata.
-L’applicazione è pensata per un solo operatore e consente di gestire clienti, anamnesi, analisi, questionari e appuntamenti in modo strutturato e sicuro.
+Applicazione web per la gestione dell'attività professionale naturopatica, sviluppata con stack PHP/MySQL e architettura MVC-like.
 
-**Obiettivo del progetto**
+## Panoramica
 
-Fornire uno strumento semplice ma completo per:
+Holistic-Health consente di centralizzare in un'unica piattaforma:
 
-gestire i dati dei clienti
+- anagrafica clienti;
+- storico anamnestico e fisico;
+- questionari e risposte;
+- appuntamenti;
+- riepiloghi di andamento supportati da Assistente AI.
 
-compilare schede anamnestiche e di stile di vita
+L'applicazione è pensata per utilizzo single-operator, con accesso autenticato tramite sessione.
 
-effettuare analisi basate su questionari
+## Stack Tecnologico
 
-pianificare e consultare appuntamenti
+- Backend: PHP
+- Database: MySQL (PDO)
+- Frontend: HTML, CSS, JavaScript
+- Server applicativo: Apache (es. XAMPP)
+- Architettura: MVC-like senza framework full-stack
 
-mantenere uno storico ordinato delle informazioni
+## Funzionalità Principali
 
-**Tecnologie utilizzate**
+- autenticazione (login/logout);
+- gestione pazienti (CRUD);
+- compilazione schede anamnestiche;
+- compilazione schede fisiche;
+- gestione appuntamenti;
+- gestione domande/questionari;
+- storico visite e indicatori sintetici;
+- sezione Assistente AI per generazione automatica dell'andamento cliente.
 
-Backend: PHP
+## Struttura Progetto
 
-Database: MySQL (PDO)
+- public/: entry point HTTP e router pagine
+- app/config/: configurazioni (database, AI)
+- app/core/: componenti base (database, auth, servizi)
+- app/models/: logica dati e query
+- app/controllers/: logica applicativa
+- app/views/: interfaccia utente
+- sql/: schema e script database
 
-Server: Apache
+## Setup Locale
 
-Frontend: HTML, CSS, JavaScript
+1. Importare [sql/schema.sql](sql/schema.sql) nel database MySQL.
+2. Configurare la connessione DB in [app/config/database.php](app/config/database.php).
+3. Avviare Apache/MySQL (es. XAMPP).
+4. Aprire l'app nel browser tramite la cartella public.
 
-Architettura: MVC-like (senza framework)
+## Assistente AI
 
-**Utenti**
+Nella cartella cliente è presente il pulsante Andamento cliente (AI), che genera un testo sintetico analizzando i dati disponibili.
 
-Un solo utente: la naturopata
+### Configurazione
 
-Accesso protetto tramite login e sessione
+Modificare [app/config/ai.php](app/config/ai.php):
 
-Nessuna gestione di ruoli o multi-utenza
+- api_key: chiave del provider AI
+- api_url: endpoint chat completions
+- model: modello da utilizzare
+- timeout: timeout richiesta
 
-**Funzionalità principali**
+In alternativa, usare variabili ambiente:
 
-Autenticazione (login / logout)
+- AI_API_KEY
+- AI_API_URL
+- AI_MODEL
+- AI_TIMEOUT
 
-Gestione clienti (CRUD)
+### Endpoint consigliato per Groq
 
-Scheda anamnestica e stile di vita (storico)
+Se utilizzi Groq, usa:
 
-Schede di analisi basate su questionari
+- https://api.groq.com/openai/v1/chat/completions
 
-Gestione questionari e domande
+### Modello consigliato per ridurre i token
 
-Registrazione delle risposte
+Per mantenere costi e latenza contenuti, un buon default è:
 
-Gestione appuntamenti
+- llama-3.1-8b-instant
 
-Dashboard riepilogativa
+Alternative orientate al risparmio:
 
-Struttura del progetto:
+- llama-3.1-8b-instant (consigliato)
+- llama-3.1-70b-versatile (più qualità, maggiore costo)
 
-public/ → pagine accessibili dal browser
+### Fallback automatico
 
-app/
+Se la API non è configurata o la richiesta fallisce, l'app mostra automaticamente il riepilogo locale calcolato internamente.
 
-config/ → configurazione database
+## Sicurezza Operativa
 
-core/ → classi base (Database, Auth)
-
-models/ → logica dei dati
-
-controllers/ → logica applicativa
-
-views/ → interfaccia utente
-
-sql/ → schema del database
-
-**Database**
-
-Il database è progettato secondo un modello relazionale normalizzato, con:
-
-separazione tra clienti, anamnesi, analisi e questionari
-
-gestione delle relazioni molti-a-molti tramite tabelle associative
-
-storico delle analisi e delle compilazioni
-
-Lo schema completo è disponibile in:
-
-sql/schema.sql
-
-**Avvio del progetto** 
-
-Importare schema.sql in MySQL
-
-Configurare le credenziali in app/config/database.php
-
-Avviare Apache
-
-Accedere all’app dal browser
-
-Effettuare il login come naturopata
+- Non salvare mai chiavi API reali nel repository.
+- Preferire variabili ambiente in sviluppo e produzione.
+- Verificare i permessi dei file di configurazione sul server.

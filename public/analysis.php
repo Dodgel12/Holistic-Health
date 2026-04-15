@@ -1,8 +1,7 @@
 <?php
 /**
- * Pagina delle analisi.
- * Gestisce la creazione e visualizzazione
- * delle schede di analisi dei clienti.
+ * Router analisi fisiche.
+ * Smista le azioni su creazione, salvataggio e dettaglio visita.
  */
 require_once __DIR__ . '/../app/config/init.php';
 

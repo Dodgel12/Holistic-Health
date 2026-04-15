@@ -1,7 +1,7 @@
 <?php
 /**
- * Router principale per le visite.
- * Gestisce storico e dettaglio singola visita.
+ * Router visite.
+ * Gestisce storico, dettaglio, modifica e cancellazione.
  */
 require_once __DIR__ . '/../app/config/init.php';
 
@@ -19,6 +19,15 @@ switch ($action) {
         break;
     case 'show':
         $controller->show($id);
+        break;
+    case 'edit':
+        $controller->edit($id);
+        break;
+    case 'update':
+        $controller->update();
+        break;
+    case 'delete':
+        $controller->delete();
         break;
     default:
         header('Location: clients.php');

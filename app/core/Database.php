@@ -1,11 +1,7 @@
 <?php
 /**
- * Classe Database.
- * Gestisce la connessione al database MySQL
- * tramite PDO e fornisce un'interfaccia sicura
- * per l'esecuzione delle query.
- * Esegue automaticamente schema.sql ad ogni avvio
- * per garantire che le tabelle esistano.
+ * Gestisce la connessione MySQL con PDO.
+ * Al primo avvio controlla anche lo schema del database.
  */
 namespace App\Core;
 
@@ -26,7 +22,7 @@ class Database
         $password = $config['password'];
 
         try {
-            // Prima connessione senza dbname per poter creare il database se non esiste
+            // Prima connessione senza dbname: cosi' possiamo creare DB/tabelle se mancano.
             $pdoInit = new PDO(
                 "mysql:host={$host};charset=utf8mb4",
                 $user,
@@ -34,11 +30,11 @@ class Database
                 );
             $pdoInit->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            // Esegue schema.sql ad ogni avvio (usa CREATE TABLE IF NOT EXISTS)
+            // Esegue schema.sql ad avvio: crea solo quello che non c'e'.
             $schemaPath = __DIR__ . '/../../sql/schema.sql';
             if (file_exists($schemaPath)) {
                 $sql = file_get_contents($schemaPath);
-                // Esegui ogni statement separatamente
+                // Esegue ogni statement SQL separato.
                 foreach (array_filter(array_map('trim', explode(';', $sql))) as $statement) {
                     if ($statement !== '') {
                         $pdoInit->exec($statement);
@@ -47,7 +43,7 @@ class Database
             }
 
 
-            // Connessione definitiva al database
+            // Connessione finale al database applicativo.
             $dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
             $this->pdo = new PDO($dsn, $user, $password);
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -79,12 +75,43 @@ class Database
         return $stmt;
     }
 
-    // Evita clonazione
+    public function hasColumn($tableName, $columnName)
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) AS cnt
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = :table_name
+               AND COLUMN_NAME = :column_name"
+        );
+        $stmt->execute([
+            'table_name' => $tableName,
+            'column_name' => $columnName
+        ]);
+
+        $row = $stmt->fetch();
+        return (int) ($row['cnt'] ?? 0) > 0;
+    }
+
+    public function hasTable($tableName)
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) AS cnt
+             FROM INFORMATION_SCHEMA.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = :table_name"
+        );
+        $stmt->execute(['table_name' => $tableName]);
+        $row = $stmt->fetch();
+        return (int) ($row['cnt'] ?? 0) > 0;
+    }
+
+    // Blocca la clonazione del singleton.
     private function __clone()
     {
     }
 
-    // Evita deserializzazione
+    // Blocca anche la deserializzazione del singleton.
     public function __wakeup()
     {
         throw new \Exception("Impossibile deserializzare un singleton.");

@@ -1,7 +1,7 @@
 <?php
 /**
- * Modello Client.
- * CRUD sui dati anagrafici dei clienti.
+ * Modello clienti.
+ * Fa CRUD sui dati anagrafici.
  */
 namespace App\Models;
 
@@ -15,7 +15,7 @@ class Client {
         $this->db = Database::getInstance();
     }
 
-    /** Tutti i clienti con data ultima visita */
+    /** Elenco clienti con ultima visita. */
     public function getAllWithLastVisit() {
         $sql = "SELECT c.*, 
                     MAX(v.data_analisi) AS ultima_visita
@@ -26,7 +26,7 @@ class Client {
         return $this->db->query($sql)->fetchAll();
     }
 
-    /** Tutti i clienti (lista semplice) */
+    /** Elenco clienti semplice. */
     public function getAll() {
         $stmt = $this->db->query("SELECT * FROM clienti ORDER BY cognome, nome");
         return $stmt->fetchAll();
@@ -34,6 +34,15 @@ class Client {
 
     public function getById($id) {
         $stmt = $this->db->query("SELECT * FROM clienti WHERE cliente_id = :id", ['id' => $id]);
+        return $stmt->fetch();
+    }
+
+    public function findByNameAndSurname($nome, $cognome) {
+        $sql = "SELECT * FROM clienti WHERE LOWER(nome) = LOWER(:nome) AND LOWER(cognome) = LOWER(:cognome) LIMIT 1";
+        $stmt = $this->db->query($sql, [
+            'nome' => trim($nome),
+            'cognome' => trim($cognome)
+        ]);
         return $stmt->fetch();
     }
 

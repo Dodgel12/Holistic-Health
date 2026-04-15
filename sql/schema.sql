@@ -1,43 +1,55 @@
--- File di definizione dello schema del database.
--- Contiene la creazione delle tabelle, chiavi primarie,
--- chiavi esterne e vincoli di integrità.
--- Usa CREATE TABLE IF NOT EXISTS per essere rieseguito senza errori.
--- =====================================================
--- DATABASE
--- =====================================================
+-- Schema principale del progetto Holistic Health.
+-- Puoi rilanciarlo piu' volte: crea solo quello che manca.
+-- Non usa DROP: evita cancellazioni accidentali.
 
-CREATE DATABASE IF NOT EXISTS gestionale_studio;
+CREATE DATABASE IF NOT EXISTS gestionale_studio
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
 USE gestionale_studio;
 
 -- =====================================================
--- USERS
+-- AUTENTICAZIONE / UTENTI
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    password_hash VARCHAR(255) NULL,
+    must_change_password TINYINT(1) NOT NULL DEFAULT 1,
+    security_question VARCHAR(255) NULL,
+    security_answer_hash VARCHAR(255) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME NULL,
+    INDEX idx_password_reset_user (user_id),
+    INDEX idx_password_reset_expiry (expires_at),
+    CONSTRAINT fk_password_reset_user
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 -- =====================================================
--- CLIENTI
+-- CLIENTI / APPUNTAMENTI / VISITE
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS clienti (
     cliente_id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     cognome VARCHAR(100) NOT NULL,
-    data_nascita DATE,
-    professione VARCHAR(150),
-    telefono VARCHAR(50),
-    email VARCHAR(150),
-    indirizzo VARCHAR(255)
-);
-
--- =====================================================
--- APPUNTAMENTI
--- =====================================================
+    data_nascita DATE NULL,
+    professione VARCHAR(150) NULL,
+    telefono VARCHAR(50) NULL,
+    email VARCHAR(150) NULL,
+    indirizzo VARCHAR(255) NULL,
+    INDEX idx_clienti_nome (nome, cognome)
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS appuntamenti (
     appuntamento_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,126 +57,154 @@ CREATE TABLE IF NOT EXISTS appuntamenti (
     data DATE NOT NULL,
     ora_inizio TIME NOT NULL,
     ora_fine TIME NOT NULL,
-    tipo VARCHAR(100),
-    stato VARCHAR(50),
-    note TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (cliente_id) REFERENCES clienti(cliente_id)
+    tipo VARCHAR(100) NULL,
+    stato VARCHAR(50) NULL,
+    note TEXT NULL,
+    INDEX idx_appuntamenti_cliente (cliente_id),
+    INDEX idx_appuntamenti_data (data, ora_inizio),
+    CONSTRAINT fk_appuntamenti_cliente
+        FOREIGN KEY (cliente_id) REFERENCES clienti(cliente_id)
         ON DELETE CASCADE
-);
-
--- =====================================================
--- VISITE
--- =====================================================
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS visite (
     visita_id INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT NOT NULL,
     data_analisi DATE NOT NULL,
-    note TEXT,
-    FOREIGN KEY (cliente_id) REFERENCES clienti(cliente_id)
+    tipo_visita VARCHAR(30) NOT NULL DEFAULT 'anamnestica',
+    note TEXT NULL,
+    INDEX idx_visite_cliente (cliente_id),
+    INDEX idx_visite_data (data_analisi, visita_id),
+    CONSTRAINT fk_visite_cliente
+        FOREIGN KEY (cliente_id) REFERENCES clienti(cliente_id)
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- =====================================================
--- SINTOMI
--- =====================================================
-
-CREATE TABLE IF NOT EXISTS sintomi (
-    sintomo_id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
-    descrizione TEXT
-);
-
-CREATE TABLE IF NOT EXISTS visita_sintomi (
-    visita_id INT,
-    sintomo_id INT,
-    PRIMARY KEY (visita_id, sintomo_id),
-    FOREIGN KEY (visita_id) REFERENCES visite(visita_id) ON DELETE CASCADE,
-    FOREIGN KEY (sintomo_id) REFERENCES sintomi(sintomo_id) ON DELETE CASCADE
-);
-
--- =====================================================
--- INTOLLERANZE
--- =====================================================
-
-CREATE TABLE IF NOT EXISTS intolleranze (
-    intolleranza_id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
-    descrizione TEXT
-);
-
-CREATE TABLE IF NOT EXISTS visita_intolleranze (
-    visita_id INT,
-    intolleranza_id INT,
-    PRIMARY KEY (visita_id, intolleranza_id),
-    FOREIGN KEY (visita_id) REFERENCES visite(visita_id) ON DELETE CASCADE,
-    FOREIGN KEY (intolleranza_id) REFERENCES intolleranze(intolleranza_id) ON DELETE CASCADE
-);
-
--- =====================================================
--- ALIMENTI
+-- CATALOGHI DI BASE
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS alimenti (
     alimento_id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS visita_alimenti (
-    visita_id INT,
-    alimento_id INT,
-    PRIMARY KEY (visita_id, alimento_id),
-    FOREIGN KEY (visita_id) REFERENCES visite(visita_id) ON DELETE CASCADE,
-    FOREIGN KEY (alimento_id) REFERENCES alimenti(alimento_id) ON DELETE CASCADE
-);
-
--- =====================================================
--- INTEGRATORI
--- =====================================================
+    nome VARCHAR(150) NOT NULL,
+    UNIQUE KEY uk_alimenti_nome (nome)
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS integratori (
     integratore_id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
-    descrizione TEXT
-);
+    descrizione TEXT NULL,
+    UNIQUE KEY uk_integratori_nome (nome)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS farmaci (
+    farmaco_id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    descrizione TEXT NULL,
+    UNIQUE KEY uk_farmaci_nome (nome)
+) ENGINE=InnoDB;
+
+-- Collegamenti tra visite e cataloghi
+CREATE TABLE IF NOT EXISTS visita_alimenti (
+    visita_id INT NOT NULL,
+    alimento_id INT NOT NULL,
+    PRIMARY KEY (visita_id, alimento_id),
+    CONSTRAINT fk_visita_alimenti_visita
+        FOREIGN KEY (visita_id) REFERENCES visite(visita_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_visita_alimenti_alimento
+        FOREIGN KEY (alimento_id) REFERENCES alimenti(alimento_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS visita_integratori (
-    visita_id INT,
-    integratore_id INT,
+    visita_id INT NOT NULL,
+    integratore_id INT NOT NULL,
     PRIMARY KEY (visita_id, integratore_id),
-    FOREIGN KEY (visita_id) REFERENCES visite(visita_id) ON DELETE CASCADE,
-    FOREIGN KEY (integratore_id) REFERENCES integratori(integratore_id) ON DELETE CASCADE
-);
-
--- =====================================================
--- QUESTIONARI / DOMANDE / RISPOSTE
--- =====================================================
-
-CREATE TABLE IF NOT EXISTS questionari (
-    questionario_id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
-    attivo BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE IF NOT EXISTS domande (
-    domanda_id INT AUTO_INCREMENT PRIMARY KEY,
-    questionario_id INT NOT NULL,
-    testo TEXT NOT NULL,
-    FOREIGN KEY (questionario_id) REFERENCES questionari(questionario_id)
+    CONSTRAINT fk_visita_integratori_visita
+        FOREIGN KEY (visita_id) REFERENCES visite(visita_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_visita_integratori_integratore
+        FOREIGN KEY (integratore_id) REFERENCES integratori(integratore_id)
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
+
+-- =====================================================
+-- PIANI TERAPEUTICI
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS piani_terapeutici (
+    piano_id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    titolo VARCHAR(180) NOT NULL,
+    obiettivi TEXT NULL,
+    note TEXT NULL,
+    stato VARCHAR(30) NOT NULL DEFAULT 'Attivo',
+    data_inizio DATE NOT NULL,
+    data_fine DATE NULL,
+    INDEX idx_piani_cliente (cliente_id),
+    INDEX idx_piani_data (data_inizio, piano_id),
+    CONSTRAINT fk_piani_cliente
+        FOREIGN KEY (cliente_id) REFERENCES clienti(cliente_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS piano_alimenti (
+    piano_id INT NOT NULL,
+    alimento_id INT NOT NULL,
+    PRIMARY KEY (piano_id, alimento_id),
+    CONSTRAINT fk_piano_alimenti_piano
+        FOREIGN KEY (piano_id) REFERENCES piani_terapeutici(piano_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_piano_alimenti_alimento
+        FOREIGN KEY (alimento_id) REFERENCES alimenti(alimento_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS piano_integratori (
+    piano_id INT NOT NULL,
+    integratore_id INT NOT NULL,
+    PRIMARY KEY (piano_id, integratore_id),
+    CONSTRAINT fk_piano_integratori_piano
+        FOREIGN KEY (piano_id) REFERENCES piani_terapeutici(piano_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_piano_integratori_integratore
+        FOREIGN KEY (integratore_id) REFERENCES integratori(integratore_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS piano_farmaci (
+    piano_id INT NOT NULL,
+    farmaco_id INT NOT NULL,
+    PRIMARY KEY (piano_id, farmaco_id),
+    CONSTRAINT fk_piano_farmaci_piano
+        FOREIGN KEY (piano_id) REFERENCES piani_terapeutici(piano_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_piano_farmaci_farmaco
+        FOREIGN KEY (farmaco_id) REFERENCES farmaci(farmaco_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- =====================================================
+-- DOMANDE ANAMNESI
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS domande_impostazioni (
+    domanda_id INT AUTO_INCREMENT PRIMARY KEY,
+    testo TEXT NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS risposte (
     risposta_id INT AUTO_INCREMENT PRIMARY KEY,
     visita_id INT NOT NULL,
-    domanda_id INT NOT NULL,
-    risposta TEXT,
-    FOREIGN KEY (visita_id) REFERENCES visite(visita_id)
-        ON DELETE CASCADE,
-    FOREIGN KEY (domanda_id) REFERENCES domande(domanda_id)
+    domanda_testo TEXT NOT NULL,
+    risposta TEXT NULL,
+    INDEX idx_risposte_visita (visita_id),
+    CONSTRAINT fk_risposte_visita
+        FOREIGN KEY (visita_id) REFERENCES visite(visita_id)
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- =====================================================
 -- SCHEDA FISICA
@@ -172,14 +212,14 @@ CREATE TABLE IF NOT EXISTS risposte (
 
 CREATE TABLE IF NOT EXISTS scheda_fisica (
     scheda_id INT AUTO_INCREMENT PRIMARY KEY,
-    visita_id INT UNIQUE,
-    massa_grassa DECIMAL(5,2),
-    massa_magra DECIMAL(5,2),
-    note TEXT,
-    data DATE,
-    FOREIGN KEY (visita_id) REFERENCES visite(visita_id)
+    visita_id INT NOT NULL,
+    peso DECIMAL(5,2) NULL,
+    altezza DECIMAL(5,2) NULL,
+    UNIQUE KEY uk_scheda_fisica_visita (visita_id),
+    CONSTRAINT fk_scheda_fisica_visita
+        FOREIGN KEY (visita_id) REFERENCES visite(visita_id)
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- =====================================================
 -- SCHEDA ANAMNESTICA
@@ -187,119 +227,70 @@ CREATE TABLE IF NOT EXISTS scheda_fisica (
 
 CREATE TABLE IF NOT EXISTS scheda_anamnestica (
     anamnesi_id INT AUTO_INCREMENT PRIMARY KEY,
-    visita_id INT UNIQUE,
-    osservazioni_finali TEXT,
-    FOREIGN KEY (visita_id) REFERENCES visite(visita_id)
+    visita_id INT NOT NULL,
+    osservazioni_finali TEXT NULL,
+    UNIQUE KEY uk_scheda_anamnestica_visita (visita_id),
+    CONSTRAINT fk_scheda_anamnestica_visita
+        FOREIGN KEY (visita_id) REFERENCES visite(visita_id)
         ON DELETE CASCADE
-);
-
--- =====================================================
--- STILE DI VITA
--- =====================================================
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS stile_vita (
     stile_id INT AUTO_INCREMENT PRIMARY KEY,
-    anamnesi_id INT UNIQUE,
-    alimentazione TEXT,
-    attivita_fisica_tipo VARCHAR(150),
-    attivita_fisica_frequenza VARCHAR(150),
-    descrizione TEXT,
-    FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
+    anamnesi_id INT NOT NULL,
+    alimentazione TEXT NULL,
+    attivita_fisica_tipo VARCHAR(150) NULL,
+    attivita_fisica_frequenza VARCHAR(150) NULL,
+    descrizione TEXT NULL,
+    UNIQUE KEY uk_stile_vita_anamnesi (anamnesi_id),
+    CONSTRAINT fk_stile_vita_anamnesi
+        FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
         ON DELETE CASCADE
-);
-
--- =====================================================
--- ANAMNESI PERSONALI
--- =====================================================
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS anamnesi_personali (
     personale_id INT AUTO_INCREMENT PRIMARY KEY,
-    anamnesi_id INT UNIQUE,
-    allergie BOOLEAN,
-    allergie_dettagli TEXT,
-    interventi_chirurgici TEXT,
-    patologie BOOLEAN,
-    patologie_dettagli TEXT,
-    alcol BOOLEAN,
-    fumo BOOLEAN,
-    farmaci_correnti TEXT,
-    FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
+    anamnesi_id INT NOT NULL,
+    allergie TINYINT(1) NULL,
+    allergie_dettagli TEXT NULL,
+    interventi_chirurgici TEXT NULL,
+    patologie TINYINT(1) NULL,
+    patologie_dettagli TEXT NULL,
+    alcol TINYINT(1) NULL,
+    fumo TINYINT(1) NULL,
+    farmaci_correnti TEXT NULL,
+    UNIQUE KEY uk_anamnesi_personali_anamnesi (anamnesi_id),
+    CONSTRAINT fk_anamnesi_personali_anamnesi
+        FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
         ON DELETE CASCADE
-);
-
--- =====================================================
--- STATO PSICO-FISICO
--- =====================================================
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS stato_psico_fisico (
     stato_id INT AUTO_INCREMENT PRIMARY KEY,
-    anamnesi_id INT UNIQUE,
-    livello_stress INT,
-    concentrazione INT,
-    umore VARCHAR(100),
-    ansia BOOLEAN,
-    motivazione TEXT,
-    note TEXT,
-    FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
+    anamnesi_id INT NOT NULL,
+    livello_stress INT NULL,
+    concentrazione INT NULL,
+    umore VARCHAR(100) NULL,
+    ansia TINYINT(1) NULL,
+    motivazione TEXT NULL,
+    UNIQUE KEY uk_stato_psico_fisico_anamnesi (anamnesi_id),
+    CONSTRAINT fk_stato_psico_fisico_anamnesi
+        FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
         ON DELETE CASCADE
-);
-
--- =====================================================
--- QUALITA SONNO
--- =====================================================
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS qualita_sonno (
     sonno_id INT AUTO_INCREMENT PRIMARY KEY,
-    anamnesi_id INT UNIQUE,
-    ore_sonno DECIMAL(4,2),
-    risvegli_notturni INT,
-    qualita_percepita VARCHAR(100),
-    difficolta_addormentarsi BOOLEAN,
-    note TEXT,
-    FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
+    anamnesi_id INT NOT NULL,
+    ore_sonno DECIMAL(4,2) NULL,
+    risvegli_notturni INT NULL,
+    qualita_percepita VARCHAR(100) NULL,
+    difficolta_addormentarsi TINYINT(1) NULL,
+    UNIQUE KEY uk_qualita_sonno_anamnesi (anamnesi_id),
+    CONSTRAINT fk_qualita_sonno_anamnesi
+        FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
--- =====================================================
--- SUPPORTI UTILIZZATI (farmaci / rimedi / integratori)
--- =====================================================
-
-CREATE TABLE IF NOT EXISTS supporti (
-    supporto_id INT AUTO_INCREMENT PRIMARY KEY,
-    categoria VARCHAR(100),
-    descrizione TEXT
-);
-
-CREATE TABLE IF NOT EXISTS anamnesi_supporti (
-    anamnesi_id INT,
-    supporto_id INT,
-    PRIMARY KEY (anamnesi_id, supporto_id),
-    FOREIGN KEY (anamnesi_id) REFERENCES scheda_anamnestica(anamnesi_id)
-        ON DELETE CASCADE,
-    FOREIGN KEY (supporto_id) REFERENCES supporti(supporto_id)
-        ON DELETE CASCADE
-);
-
--- ====================================================================================
--- INSERT INTO DATI DEFAULT - utente admin con password in chiaro
--- INSERT IGNORE evita duplicati se l'utente esiste già
--- ====================================================================================
-
-INSERT IGNORE INTO users (username, password) VALUES ('admin', 'password123');
-
--- =====================================================
--- AGGIORNA SCHEDA FISICA CON NUOVI PARAMETRI
--- Aggiunte colonne per le misurazioni complete.
--- Usa ALTER TABLE IF NOT EXISTS per sicurezza.
--- =====================================================
-
--- Aggiunge colonne per le misurazioni fisiche complete
-ALTER TABLE scheda_fisica
-    ADD COLUMN IF NOT EXISTS peso DECIMAL(5,2),
-    ADD COLUMN IF NOT EXISTS altezza DECIMAL(5,2),
-    ADD COLUMN IF NOT EXISTS acqua_corporea DECIMAL(5,2),
-    ADD COLUMN IF NOT EXISTS metabolismo_basale INT,
-    ADD COLUMN IF NOT EXISTS eta_metabolica INT,
-    ADD COLUMN IF NOT EXISTS grasso_viscerale INT,
-    ADD COLUMN IF NOT EXISTS massa_ossea DECIMAL(5,2);
+-- Nota: l'utente admin iniziale viene creato da public/init_db.php.
 

@@ -1,7 +1,7 @@
 <?php
 /**
- * Controller Dashboard.
- * Carica statistiche e dati per la dashboard principale.
+ * Controller dashboard.
+ * Carica dati, statistiche e appuntamenti da mostrare in home.
  */
 namespace App\Controllers;
 
@@ -19,7 +19,7 @@ class DashboardController
     {
         $db = Database::getInstance();
 
-        // Statistiche
+        // Numeri principali della dashboard.
         $totalClienti = $db->query("SELECT COUNT(*) as n FROM clienti")->fetch()['n'];
 
         $today = date('Y-m-d');
@@ -35,13 +35,13 @@ class DashboardController
             ['inizio' => $meseInizio, 'fine' => $meseFine]
         )->fetch()['n'];
 
-        // Appuntamenti del mese corrente (per il calendario)
+        // Giorni con appuntamenti nel mese corrente (usati nel calendario).
         $appuntamentiMese = $db->query(
             "SELECT DISTINCT data FROM appuntamenti WHERE data BETWEEN :inizio AND :fine",
             ['inizio' => $meseInizio, 'fine' => $meseFine]
         )->fetchAll(\PDO::FETCH_COLUMN);
 
-        // Prossimi appuntamenti (max 5)
+        // Prossimi appuntamenti da mostrare in alto (max 5).
         $appuntamentiProssimi = $db->query(
             "SELECT a.*, c.nome, c.cognome 
              FROM appuntamenti a 

@@ -1,28 +1,28 @@
 <?php
-// Prima bisogna configurare i parametri per il collegamento al DB
+// Carica i parametri di connessione al database.
 $config = require __DIR__ . '/../app/config/database.php';
 
 try {
-    // 1. Connessione al server MySQL
+    // 1) Si collega al server MySQL.
     $dsn = "mysql:host={$config['host']};charset={$config['charset']}";
     $pdo = new PDO($dsn, $config['username'], $config['password']);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    echo "Connected to MySQL server.\n";
+    echo "Connessione al server MySQL riuscita.\n";
 
-    // 2. Legge lo schema SQL
+    // 2) Legge lo schema SQL.
     $schemaFile = __DIR__ . '/../sql/schema.sql';
     if (!file_exists($schemaFile)) {
-        die("Schema file not found at $schemaFile");
+        die("File schema non trovato in: $schemaFile");
     }
     $sql = file_get_contents($schemaFile);
 
-    // 3. Esegue il file schema.sql
+    // 3) Esegue schema.sql.
     $pdo->exec($sql);
-    echo "Database structure imported successfully.\n";
+    echo "Struttura database importata con successo.\n";
 
-    // 4. Create a default user for testing
-    // Re-connect to the specific database now that it should exist
+    // 4) Crea l'utente admin iniziale se serve.
+    // Si ricollega al DB specifico ora che esiste.
     $dsn_db = "mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}";
     $pdo_db = new PDO($dsn_db, $config['username'], $config['password']);
     $pdo_db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -31,21 +31,30 @@ try {
     $password = 'password123';
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Check if user exists
-    $stmt = $pdo_db->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+    // Se l'utente non esiste lo crea.
+    // Se esiste ma hash mancante, sistema la password in modo sicuro.
+    $stmt = $pdo_db->prepare("SELECT user_id, password_hash FROM users WHERE username = ? LIMIT 1");
     $stmt->execute([$username]);
-    if ($stmt->fetchColumn() == 0) {
-        $insert = $pdo_db->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
-        $insert->execute([$username, $hashed_password]);
-        echo "Default user created: User: $username, Pass: $password\n";
-    }
-    else {
-        echo "Default user already exists.\n";
+    $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$existingUser) {
+        $insert = $pdo_db->prepare("INSERT INTO users (username, password_hash, must_change_password) VALUES (?, ?, ?)");
+        $insert->execute([$username, $hashed_password, 1]);
+        echo "Utente predefinito creato: User: $username, Pass: $password\n";
+    } else {
+        $existingHash = trim((string) ($existingUser['password_hash'] ?? ''));
+        if ($existingHash === '') {
+            $update = $pdo_db->prepare("UPDATE users SET password_hash = ?, must_change_password = ? WHERE user_id = ?");
+            $update->execute([$hashed_password, 1, (int) $existingUser['user_id']]);
+            echo "Utente predefinito aggiornato (password hash mancante).\n";
+        } else {
+            echo "Utente predefinito già presente.\n";
+        }
     }
 
-    echo "Initialization complete.";
+    echo "Inizializzazione completata.";
 
 }
 catch (PDOException $e) {
-    die("DB Error: " . $e->getMessage());
+    die("Errore DB: " . $e->getMessage());
 }

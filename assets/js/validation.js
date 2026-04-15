@@ -1,12 +1,10 @@
 /**
  * validation.js
- * Funzioni di validazione form riutilizzabili — Terranova
+ * Funzioni riutilizzabili per validare i form.
  */
 
 const Validation = {
-    /**
-     * Valida che un campo non sia vuoto.
-     */
+    /** Controlla che il campo non sia vuoto. */
     required(field, errorEl, msg = 'Campo obbligatorio.') {
         const val = field.value.trim();
         if (!val) {
@@ -17,9 +15,7 @@ const Validation = {
         return true;
     },
 
-    /**
-     * Valida formato email.
-     */
+    /** Controlla il formato email. */
     email(field, errorEl, msg = 'Email non valida.') {
         const val = field.value.trim();
         if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
@@ -30,9 +26,7 @@ const Validation = {
         return true;
     },
 
-    /**
-     * Valida che un valore numerico sia in un certo range.
-     */
+    /** Controlla che il numero sia nel range richiesto. */
     numericRange(field, errorEl, min, max, msg = null) {
         const val = parseFloat(field.value);
         if (field.value !== '' && (isNaN(val) || val < min || val > max)) {
@@ -43,9 +37,7 @@ const Validation = {
         return true;
     },
 
-    /**
-     * Valida che sia selezionato un valore (select/radio).
-     */
+    /** Controlla che sia selezionata un'opzione. */
     selected(field, errorEl, msg = 'Seleziona un\'opzione.') {
         if (!field.value) {
             this.showError(field, errorEl, msg);
@@ -55,9 +47,7 @@ const Validation = {
         return true;
     },
 
-    /**
-     * Valida una data.
-     */
+    /** Controlla che la data sia valida. */
     date(field, errorEl, msg = 'Data non valida.') {
         const val = field.value;
         if (val && isNaN(Date.parse(val))) {
@@ -81,9 +71,7 @@ const Validation = {
         if (errorEl) errorEl.classList.remove('visible');
     },
 
-    /**
-     * Aggiunge listener per pulire errore all'input.
-     */
+    /** Pulisce l'errore quando l'utente modifica il campo. */
     bindClear(fields) {
         fields.forEach(({ field, errorEl }) => {
             if (field) {

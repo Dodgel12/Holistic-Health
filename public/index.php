@@ -1,8 +1,7 @@
 <?php
 /**
- * Punto di ingresso dell'applicazione.
- * Gestisce il reindirizzamento automatico
- * verso la dashboard o la pagina di login.
+ * Entry point dell'app.
+ * Se sei loggato vai in dashboard, altrimenti in login.
  */
 require_once __DIR__ . '/../app/config/init.php';
 

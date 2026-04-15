@@ -1,7 +1,7 @@
 <?php
 /**
- * Modello SchedaAnamnestica.
- * Crea e recupera i dati anamnestici completi del cliente.
+ * Modello scheda anamnestica.
+ * Salva e recupera i dati anamnestici del cliente.
  */
 namespace App\Models;
 
@@ -26,16 +26,24 @@ class SchedaAnamnestica {
             $scheda['personale']   = $this->db->query("SELECT * FROM anamnesi_personali WHERE anamnesi_id = :id", ['id' => $id])->fetch();
             $scheda['psico_fisico']= $this->db->query("SELECT * FROM stato_psico_fisico WHERE anamnesi_id = :id", ['id' => $id])->fetch();
             $scheda['sonno']       = $this->db->query("SELECT * FROM qualita_sonno WHERE anamnesi_id = :id", ['id' => $id])->fetch();
+
+            $scheda['risposte_domande'] = $this->db->query(
+                "SELECT domanda_testo AS domanda, risposta
+                 FROM risposte
+                 WHERE visita_id = :visita_id
+                 ORDER BY risposta_id ASC",
+                ['visita_id' => $visitaId]
+            )->fetchAll();
         }
 
         return $scheda;
     }
 
     /**
-     * Crea la scheda anamnestica completa e tutte le tabelle collegate.
+     * Crea la scheda anamnestica e salva tutti i dati collegati.
      */
     public function create($visitaId, $data) {
-        // 1. Scheda anamnestica principale
+        // 1) Salva la scheda principale.
         $this->db->query(
             "INSERT INTO scheda_anamnestica (visita_id, osservazioni_finali) VALUES (:visita_id, :osservazioni)",
             [
@@ -45,7 +53,7 @@ class SchedaAnamnestica {
         );
         $anamnesiId = $this->db->getConnection()->lastInsertId();
 
-        // 2. Stile di vita
+        // 2) Salva lo stile di vita.
         $this->db->query(
             "INSERT INTO stile_vita (anamnesi_id, alimentazione, attivita_fisica_tipo, attivita_fisica_frequenza, descrizione)
              VALUES (:anamnesi_id, :alimentazione, :tipo, :frequenza, :descrizione)",
@@ -58,7 +66,7 @@ class SchedaAnamnestica {
             ]
         );
 
-        // 3. Anamnesi personali
+        // 3) Salva anamnesi personale.
         $this->db->query(
             "INSERT INTO anamnesi_personali 
                 (anamnesi_id, allergie, allergie_dettagli, interventi_chirurgici,
@@ -78,7 +86,7 @@ class SchedaAnamnestica {
             ]
         );
 
-        // 4. Stato psico-fisico
+        // 4) Salva stato psico-fisico.
         $this->db->query(
             "INSERT INTO stato_psico_fisico 
                 (anamnesi_id, livello_stress, concentrazione, umore, ansia, motivazione)
@@ -93,7 +101,7 @@ class SchedaAnamnestica {
             ]
         );
 
-        // 5. Qualità sonno
+        // 5) Salva dati sul sonno.
         $this->db->query(
             "INSERT INTO qualita_sonno 
                 (anamnesi_id, ore_sonno, risvegli_notturni, qualita_percepita, difficolta_addormentarsi)
@@ -107,6 +115,39 @@ class SchedaAnamnestica {
             ]
         );
 
+        // 6) Salva risposte alle domande selezionate in anamnesi.
+        $selectedQuestionIds = $data['domande_selezionate'] ?? [];
+        $answersMap = $data['risposte_domande'] ?? [];
+
+        if (!empty($selectedQuestionIds) && is_array($selectedQuestionIds)) {
+            foreach ($selectedQuestionIds as $domandaId) {
+                $domandaId = (int) $domandaId;
+                if ($domandaId <= 0) {
+                    continue;
+                }
+
+                $domanda = $this->db->query(
+                    "SELECT testo FROM domande_impostazioni WHERE domanda_id = :id",
+                    ['id' => $domandaId]
+                )->fetch();
+
+                if (!$domanda) {
+                    continue;
+                }
+
+                $risposta = trim((string) ($answersMap[$domandaId] ?? ''));
+                $this->db->query(
+                    "INSERT INTO risposte (visita_id, domanda_testo, risposta)
+                     VALUES (:visita_id, :domanda_testo, :risposta)",
+                    [
+                        'visita_id' => $visitaId,
+                        'domanda_testo' => $domanda['testo'],
+                        'risposta' => $risposta
+                    ]
+                );
+            }
+        }
+
         return $anamnesiId;
     }
 
@@ -119,5 +160,24 @@ class SchedaAnamnestica {
             ['id' => $clientId]
         )->fetch();
         return (int)($res['count'] ?? 0) > 0;
+    }
+
+    public function getLatestByClient($clientId)
+    {
+        $row = $this->db->query(
+            "SELECT s.visita_id
+             FROM scheda_anamnestica s
+             JOIN visite v ON v.visita_id = s.visita_id
+             WHERE v.cliente_id = :client_id
+             ORDER BY v.data_analisi DESC, v.visita_id DESC
+             LIMIT 1",
+            ['client_id' => $clientId]
+        )->fetch();
+
+        if (!$row) {
+            return null;
+        }
+
+        return $this->getByVisitaId((int) $row['visita_id']);
     }
 }

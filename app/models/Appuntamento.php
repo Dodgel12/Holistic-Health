@@ -1,8 +1,7 @@
 <?php
 /**
- * Modello Appuntamento.
- * Gestisce gli appuntamenti tra la naturopata
- * e i clienti, inclusi data, durata e stato.
+ * Modello appuntamenti.
+ * Gestisce creazione, elenco, stato ed eliminazione.
  */
 namespace App\Models;
 
@@ -16,11 +15,21 @@ class Appuntamento {
     }
 
     public function getAll() {
+        $this->normalizeStatuses();
+
         $sql = "SELECT a.*, c.nome, c.cognome 
                 FROM appuntamenti a 
                 JOIN clienti c ON a.cliente_id = c.cliente_id 
                 ORDER BY a.data, a.ora_inizio";
         return $this->db->query($sql)->fetchAll();
+    }
+
+    public function normalizeStatuses() {
+        $sql = "UPDATE appuntamenti
+                SET stato = 'Saltato'
+                WHERE stato = 'Programmato'
+                  AND TIMESTAMP(data, ora_fine) < NOW()";
+        return $this->db->query($sql);
     }
 
     public function create($data) {
@@ -40,5 +49,18 @@ class Appuntamento {
 
     public function delete($id) {
         return $this->db->query("DELETE FROM appuntamenti WHERE appuntamento_id = :id", ['id' => $id]);
+    }
+
+    public function updateStatus($id, $stato) {
+        $allowed = ['Programmato', 'Assente', 'Svolto', 'Saltato'];
+        if (!in_array($stato, $allowed, true)) {
+            return false;
+        }
+
+        $sql = "UPDATE appuntamenti SET stato = :stato WHERE appuntamento_id = :id";
+        return $this->db->query($sql, [
+            'stato' => $stato,
+            'id' => $id
+        ]);
     }
 }

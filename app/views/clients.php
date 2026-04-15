@@ -15,16 +15,19 @@
     </div>
 </div>
 
-<div class="card" style="padding:0; overflow:hidden;">
+<div class="card card-no-pad">
     <!-- Table header toolbar -->
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border);">
+    <div class="card-toolbar">
         <div class="search-bar">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            <input type="text" id="clientSearch" placeholder="Cerca paziente per nome o ID…">
+            <input type="text" id="clientSearch" placeholder="Cerca paziente per nome o ID…" aria-label="Cerca paziente">
         </div>
-        <span class="text-muted text-sm" id="clientCount"><?php echo count($clients); ?> pazienti</span>
+        <div class="flex header-meta-right">
+            <span class="search-hint">Shortcut: /</span>
+            <span class="text-muted text-sm" id="clientCount"><?php echo count($clients); ?> pazienti</span>
+        </div>
     </div>
 
     <div class="table-wrapper">
@@ -33,7 +36,7 @@
                 <tr>
                     <th>Nome</th>
                     <th>Ultima Visita</th>
-                    <th style="text-align:right;">Azioni</th>
+                    <th class="table-th-right">Azioni</th>
                 </tr>
             </thead>
             <tbody id="clientsTable">
@@ -62,13 +65,25 @@
                         <?php endif; ?>
                     </td>
                     <td>
-                        <div style="display:flex; gap:8px; justify-content:flex-end;">
+                        <div class="table-header-actions">
+                            <a href="clients.php?action=edit&id=<?php echo $c['cliente_id']; ?>"
+                                         class="btn btn-primary btn-sm">
+                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                Modifica
+                            </a>
                             <a href="visits.php?action=history&clientId=<?php echo $c['cliente_id']; ?>"
-                               class="btn btn-accent btn-sm">
+                                         class="btn btn-primary btn-sm">
                                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                                 Visite
+                            </a>
+                            <a href="therapy.php?clientId=<?php echo $c['cliente_id']; ?>"
+                                         class="btn btn-primary btn-sm">
+                                Piano
                             </a>
                             <a href="clients.php?action=show&id=<?php echo $c['cliente_id']; ?>"
                                class="btn btn-primary btn-sm">
@@ -77,7 +92,7 @@
                                 </svg>
                                 Cartella
                             </a>
-                            <button class="btn btn-ghost btn-sm btn-icon"
+                                <button class="btn btn-danger btn-sm btn-icon"
                                     onclick="DeleteModal.open(<?php echo $c['cliente_id']; ?>, '<?php echo addslashes($c['nome'].' '.$c['cognome']); ?>')"
                                     title="Elimina paziente">
                                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -89,7 +104,7 @@
                 </tr>
                 <?php endforeach; ?>
             <?php else: ?>
-                <tr><td colspan="3" style="text-align:center;padding:32px;color:var(--text-muted);">Nessun paziente trovato.</td></tr>
+                <tr><td colspan="3" class="empty-state">Nessun paziente trovato.</td></tr>
             <?php endif; ?>
             </tbody>
         </table>
@@ -125,9 +140,8 @@
     </div>
 </div>
 
-<script src="../assets/js/delete-modal.js"></script>
 <script>
-// Ricerca live
+// Ricerca in tempo reale.
 const searchInput = document.getElementById('clientSearch');
 const rows        = document.querySelectorAll('#clientsTable tr[data-name]');
 const countEl     = document.getElementById('clientCount');
@@ -142,6 +156,13 @@ searchInput.addEventListener('input', function() {
         if (match) visible++;
     });
     countEl.textContent = visible + ' pazienti';
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+    }
 });
 </script>
 

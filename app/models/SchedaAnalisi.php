@@ -1,7 +1,7 @@
 <?php
 /**
- * Modello SchedaAnalisi.
- * Gestisce visite e dati fisici con tutti i parametri.
+ * Modello scheda analisi.
+ * Gestisce visite e dati fisici.
  */
 namespace App\Models;
 
@@ -14,22 +14,39 @@ class SchedaAnalisi {
         $this->db = Database::getInstance();
     }
 
-    public function createVisita($clienteId, $data, $note = '') {
+    public function createVisita($clienteId, $data, $note = '', $tipoVisita = 'anamnestica') {
         $this->db->query(
-            "INSERT INTO visite (cliente_id, data_analisi, note) VALUES (:cliente_id, :data_analisi, :note)",
-            ['cliente_id' => $clienteId, 'data_analisi' => $data, 'note' => $note]
+            "INSERT INTO visite (cliente_id, data_analisi, tipo_visita, note) VALUES (:cliente_id, :data_analisi, :tipo_visita, :note)",
+            ['cliente_id' => $clienteId, 'data_analisi' => $data, 'tipo_visita' => $tipoVisita, 'note' => $note]
         );
         return $this->db->getConnection()->lastInsertId();
     }
 
+    public function updateVisita($visitaId, $clienteId, $data, $note = '', $tipoVisita = 'anamnestica') {
+        return $this->db->query(
+            "UPDATE visite
+             SET data_analisi = :data_analisi,
+                 tipo_visita = :tipo_visita,
+                 note = :note
+             WHERE visita_id = :visita_id AND cliente_id = :cliente_id",
+            [
+                'visita_id' => $visitaId,
+                'cliente_id' => $clienteId,
+                'data_analisi' => $data,
+                'tipo_visita' => $tipoVisita,
+                'note' => $note
+            ]
+        );
+    }
+
     public function getVisiteByClient($clienteId) {
         return $this->db->query(
-            "SELECT * FROM visite WHERE cliente_id = :id ORDER BY data_analisi DESC",
+            "SELECT * FROM visite WHERE cliente_id = :id ORDER BY data_analisi DESC, visita_id DESC",
             ['id' => $clienteId]
         )->fetchAll();
     }
 
-    /** Visite con dati fisici inclusi (per storico) */
+    /** Visite con dati fisici inclusi, utili per lo storico. */
     public function getVisiteByClientWithFisica($clienteId) {
         $visite = $this->getVisiteByClient($clienteId);
         foreach ($visite as &$v) {
@@ -38,9 +55,27 @@ class SchedaAnalisi {
                 ['id' => $v['visita_id']]
             )->fetch();
             $v['fisica'] = $fisica ?: [];
+
+            $v['anamnesi_snapshot'] = $this->getLatestAnamnesiSnapshotUntilVisita(
+                (int) $clienteId,
+                $v['data_analisi'],
+                (int) $v['visita_id']
+            );
         }
         unset($v);
         return $visite;
+    }
+
+    public function getLatestFisicaByClient($clienteId) {
+        return $this->db->query(
+            "SELECT v.visita_id, v.data_analisi, sf.*
+             FROM visite v
+             JOIN scheda_fisica sf ON sf.visita_id = v.visita_id
+             WHERE v.cliente_id = :id
+             ORDER BY v.data_analisi DESC, v.visita_id DESC
+             LIMIT 1",
+            ['id' => $clienteId]
+        )->fetch() ?: null;
     }
 
     public function getVisitaById($id) {
@@ -54,43 +89,90 @@ class SchedaAnalisi {
                 ['id' => $id]
             )->fetch() ?: [];
 
-            // Aggiunta: recupera anche i dati anamnestici se presenti
+            // Recupera anche i dati anamnestici, se presenti.
             $schedaAnamnestica = new SchedaAnamnestica();
             $visita['anamnesi'] = $schedaAnamnestica->getByVisitaId($id);
         }
         return $visita;
     }
 
+    public function getLatestAnamnesiSnapshotUntilVisita($clienteId, $dataAnalisi, $visitaId)
+    {
+        $row = $this->db->query(
+                        "SELECT s.visita_id
+             FROM scheda_anamnestica s
+             JOIN visite v ON v.visita_id = s.visita_id
+             WHERE v.cliente_id = :cliente_id
+               AND (
+                    v.data_analisi < :data_analisi
+                    OR (v.data_analisi = :data_analisi AND v.visita_id <= :visita_id)
+               )
+             ORDER BY v.data_analisi DESC, v.visita_id DESC
+             LIMIT 1",
+            [
+                'cliente_id' => $clienteId,
+                'data_analisi' => $dataAnalisi,
+                'visita_id' => $visitaId
+            ]
+        )->fetch();
+
+        if (!$row) {
+            return null;
+        }
+
+        $schedaAnamnestica = new SchedaAnamnestica();
+        return $schedaAnamnestica->getByVisitaId((int) $row['visita_id']);
+    }
+
+    public function getLatestFisicaSnapshotUntilVisita($clienteId, $dataAnalisi, $visitaId)
+    {
+        return $this->db->query(
+            "SELECT v.visita_id, v.data_analisi, sf.*
+             FROM visite v
+             JOIN scheda_fisica sf ON sf.visita_id = v.visita_id
+             WHERE v.cliente_id = :cliente_id
+               AND (
+                    v.data_analisi < :data_analisi
+                    OR (v.data_analisi = :data_analisi AND v.visita_id <= :visita_id)
+               )
+             ORDER BY v.data_analisi DESC, v.visita_id DESC
+             LIMIT 1",
+            [
+                'cliente_id' => $clienteId,
+                'data_analisi' => $dataAnalisi,
+                'visita_id' => $visitaId
+            ]
+        )->fetch() ?: null;
+    }
+
+    public function deleteVisita($visitaId, $clienteId)
+    {
+        return $this->db->query(
+            "DELETE FROM visite WHERE visita_id = :visita_id AND cliente_id = :cliente_id",
+            [
+                'visita_id' => $visitaId,
+                'cliente_id' => $clienteId
+            ]
+        );
+    }
+
     public function saveFisica($visitaId, $data) {
         $sql = "INSERT INTO scheda_fisica 
-                    (visita_id, massa_grassa, note, data, peso, altezza, acqua_corporea,
-                     metabolismo_basale, eta_metabolica, grasso_viscerale, massa_ossea)
+                    (visita_id, peso, altezza)
                 VALUES 
-                    (:visita_id, :massa_grassa, :note, :data, :peso, :altezza, :acqua_corporea,
-                     :metabolismo_basale, :eta_metabolica, :grasso_viscerale, :massa_ossea)
+                    (:visita_id, :peso, :altezza)
                 ON DUPLICATE KEY UPDATE
-                    massa_grassa        = VALUES(massa_grassa),
-                    note                = VALUES(note),
                     peso                = VALUES(peso),
-                    altezza             = VALUES(altezza),
-                    acqua_corporea      = VALUES(acqua_corporea),
-                    metabolismo_basale  = VALUES(metabolismo_basale),
-                    eta_metabolica      = VALUES(eta_metabolica),
-                    grasso_viscerale    = VALUES(grasso_viscerale),
-                    massa_ossea         = VALUES(massa_ossea)";
+                    altezza             = VALUES(altezza)";
 
         $this->db->query($sql, [
             'visita_id'          => $visitaId,
-            'massa_grassa'       => $data['massa_grassa'] ?? null,
-            'note'               => $data['note'] ?? '',
-            'data'               => date('Y-m-d'),
             'peso'               => $data['peso'] ?? null,
             'altezza'            => $data['altezza'] ?? null,
-            'acqua_corporea'     => $data['acqua_corporea'] ?? null,
-            'metabolismo_basale' => $data['metabolismo_basale'] ?? null,
-            'eta_metabolica'     => $data['eta_metabolica'] ?? null,
-            'grasso_viscerale'   => $data['grasso_viscerale'] ?? null,
-            'massa_ossea'        => $data['massa_ossea'] ?? null,
         ]);
+    }
+
+    public function deleteFisicaByVisita($visitaId) {
+        return $this->db->query("DELETE FROM scheda_fisica WHERE visita_id = :id", ['id' => $visitaId]);
     }
 }
