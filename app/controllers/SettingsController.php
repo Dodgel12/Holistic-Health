@@ -120,8 +120,23 @@ class SettingsController
             exit;
         }
 
-        $this->catalogoModel->createItem($categoria, $nome, $descrizione);
-        $_SESSION['settings_message'] = 'Elemento di configurazione aggiunto.';
+        try {
+            $newId = $this->catalogoModel->createItem($categoria, $nome, $descrizione);
+
+            if (!$newId) {
+                $_SESSION['settings_message'] = 'Categoria non valida.';
+            } else {
+                $_SESSION['settings_message'] = 'Elemento di configurazione aggiunto.';
+            }
+        } catch (\PDOException $e) {
+            $mysqlErr = $e->errorInfo[1] ?? null;
+            if ($mysqlErr === 1062) {
+                $_SESSION['settings_message'] = 'Elemento già presente.';
+            } else {
+                $_SESSION['settings_message'] = 'Errore durante il salvataggio dell\'elemento.';
+            }
+        }
+
         header('Location: settings.php');
         exit;
     }
