@@ -50,6 +50,15 @@ L'applicazione è pensata per utilizzo single-operator, con accesso autenticato 
 3. Avviare Apache/MySQL (es. XAMPP).
 4. Aprire l'app nel browser tramite la cartella public.
 
+### Credenziali iniziali
+
+Dopo l'import dello schema viene creato un utente iniziale:
+
+- username: `admin`
+- password: `password123`
+
+Al primo accesso verrà richiesto di cambiare password.
+
 ## Assistente AI
 
 Nella cartella cliente è presente il pulsante Andamento cliente (AI), che genera un testo sintetico analizzando i dati disponibili.

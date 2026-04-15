@@ -22,6 +22,11 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+-- Utente iniziale (admin / password123). Se esiste già non viene sovrascritto.
+INSERT INTO users (username, password_hash, must_change_password)
+VALUES ('admin', '$2y$10$LHRG85XGH2IHQTNOjMeyIutzd5dS15ibkDR2IsP/ZGh3Oh9N.3KMG', 1)
+ON DUPLICATE KEY UPDATE username = username;
+
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     token_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
